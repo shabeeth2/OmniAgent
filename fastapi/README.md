@@ -4,7 +4,7 @@ Local single-user FastAPI/LangGraph demonstration of tool discovery, dependency-
 
 ## Setup
 
-Use Python 3.13, pinned in `.python-version`, for the local Docling dependency stack. `pyproject.toml` declares a wider Python range; Python 3.15 is not the supported setup for this demo.
+Use Python 3.13, pinned in `.python-version`, for the local Docling dependency stack. `pyproject.toml` requires `>=3.13,<3.14`.
 
 From `fastapi/`:
 
@@ -19,14 +19,14 @@ AGENT_MODEL=your-tool-calling-chat-model
 OPENAI_API_KEY=your-chat-provider-key
 # Optional: an OpenAI-compatible chat endpoint
 # OPENAI_BASE_URL=https://your-provider.example/v1
-GEMINI_API_KEY=your-gemini-key
-GEMINI_EMBEDDING_MODEL=your-supported-embedding-model
-GEMINI_BASE_URL=https://generativelanguage.googleapis.com/v1beta
+JINA_API_KEY=your-jina-key
+JINA_EMBEDDING_MODEL=jina-embeddings-v5-omni-small
+JINA_BASE_URL=https://api.jina.ai/v1/embeddings
 # Optional serialized character budget, including schemas; not tokens
 CONTEXT_BUDGET=64000
 ```
 
-Chat and embeddings are independent. Embeddings use the official `langchain-google-genai` integration with 1536 output dimensions; choose a model supporting that dimension. `OPENAI_API_KEY` is for chat, not embeddings. `ANTHROPIC_API_KEY` and `RAG_EMBEDDING_MODEL` are not used by the current agent factory. Startup validates settings, ingests `sample_docs`, and builds the tool index; missing credentials/provider errors fail explicitly. Document text, tool descriptions and discovery queries go to Gemini; chat/tool results go to the chat provider. Provider usage can incur charges. Imports alone make no provider calls.
+Chat and embeddings are independent. Embeddings use Jina's API with 1024 dimensions; `OPENAI_API_KEY` is for chat, not embeddings. Startup validates settings, ingests `sample_docs`, and builds the tool index; missing credentials/provider errors fail explicitly. Document text, tool descriptions and discovery queries go to Jina; chat/tool results go to the chat provider. Provider usage can incur charges. Imports alone make no provider calls.
 
 ```powershell
 uv run --python 3.13 uvicorn agent_backend.main:app --reload --host 127.0.0.1 --port 8000
@@ -74,7 +74,7 @@ Chat/resume responses are `text/event-stream`, ending `data: [DONE]\n\n`. Conten
 
 Startup creates tables, adds the trace catalog-version column if missing and backfills available historical current-run records. It cannot recover historical runs that were never saved separately. Pending approvals survive restarts; active interrupted executions are failed and never replayed automatically. Registry changes invalidate pending approval. Checkpointing cannot guarantee exactly-once effects when a process crashes during an external request; reconcile before retrying.
 
-Tool embeddings use a new `langchain-google-genai-v1` cache identity containing endpoint/model, dimensions, RETRIEVAL_DOCUMENT/RETRIEVAL_QUERY task semantics and description content. Old SQLite cache entries remain intact and are not mixed with new SDK vectors. The SDK batches document inputs; cache misses and index writes are batched. Query embeddings remain uncached. Restart rebuilds the process-local index from cached vectors; new/changed descriptions embed again. Query embeddings are not persisted. The knowledge index is process-local and re-ingested at startup, without the tool-description cache. Rebuild knowledge after changing embedding models; never mix incompatible vectors. Protect all data files with OS permissions. Redacted previews are not a general personal-data scrubber.
+Tool embeddings use a `jina-v1` cache identity containing model, endpoint, and dimensions; cache keys also include description content. Jina uses `retrieval.passage` for descriptions and `retrieval.query` for searches. Old SQLite cache entries remain intact and are not mixed with the current provider identity. Cache misses and index writes are batched. Restart rebuilds the process-local index from cached vectors; new/changed descriptions embed again. Query embeddings are not persisted. The knowledge index is process-local and re-ingested at startup, without the tool-description cache. Rebuild knowledge after changing embedding models; never mix incompatible vectors. Protect all data files with OS permissions. Redacted previews are not a general personal-data scrubber.
 
 ## Knowledge retrieval
 
@@ -84,7 +84,7 @@ Docling structurally chunks local `.md`, `.txt` and `.pdf` files and retains sou
 uv run --python 3.13 python -m agent_backend.ingest --docs sample_docs --query "How quickly does support respond?"
 ```
 
-The CLI builds its own store and exits; it does not populate the running server. For direct usage, pass the same store from `ingest(...)` into `create_retrieval_tool(store)`. Custom LangChain `Embeddings` plus matching dimensions can replace Gemini in tests/ingestion.
+The CLI builds its own store and exits; it does not populate the running server. For direct usage, pass the same store from `ingest(...)` into `create_retrieval_tool(store)`. Custom LangChain `Embeddings` plus matching dimensions can replace Jina in tests/ingestion.
 
 ## External connections and approvals
 
@@ -104,7 +104,7 @@ uv run --python 3.13 python -m unittest discover -s tests
 
 The final ultra-refactor offline suite passed 93 tests; see [the detailed results](../docs/ultra-refactor.md#executed-final-validation). See [validation](../docs/validation.md). The offline hash discovery benchmark reports 95% recall@5 on twenty labeled queries at each of 50/100/500/1000 descriptors, using overlapping synthetic distractors. This is a routing smoke test, not semantic-model or production performance evidence. See `scripts/evaluation.py` and the architecture proposal.
 
-The paid harness is opt-in and has not been run for this change:
+The paid harness is opt-in and has not been run for this change. Its live discovery path still requests 1536 dimensions; align it with the current 1024-dimensional runtime before evaluation:
 
 ```powershell
 uv run --python 3.13 python scripts/evaluation.py --mode discovery

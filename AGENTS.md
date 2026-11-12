@@ -25,7 +25,7 @@ Keep one backend process bound to loopback. There is no application authenticati
 
 ## Settings and state
 
-Backend `.env`: required `AGENT_MODEL`, `OPENAI_API_KEY`, `GEMINI_API_KEY`, `GEMINI_EMBEDDING_MODEL`; optional `OPENAI_BASE_URL`, `GEMINI_BASE_URL`, `CONTEXT_BUDGET`. Chat uses the OpenAI-compatible endpoint; embeddings use native Gemini embedContent with 1536 dimensions. Anthropic/OpenAI embedding settings are not the active configuration. Frontend `NEXT_PUBLIC_FASTAPI_URL` defaults to `http://localhost:8000`.
+Backend `.env`: required `AGENT_MODEL`, `OPENAI_API_KEY`, `JINA_API_KEY`, `JINA_EMBEDDING_MODEL`, `JINA_BASE_URL`; optional `OPENAI_BASE_URL`, `CONTEXT_BUDGET`. Chat uses the OpenAI-compatible endpoint; knowledge and tool embeddings use Jina with 1024 dimensions. Frontend `NEXT_PUBLIC_FASTAPI_URL` defaults to `http://localhost:8000`.
 
 `fastapi/data/`: `app.db` conversations/requests/traces, `agent-checkpoints.db` durable approvals, `paypal-demo.db` simulated records, `tool-embeddings.db` cached descriptions, and `tool-registry.json` plaintext local credentials. Preserve saved state. Knowledge vectors remain process-local and re-ingest at startup. Changing embedding identity/dimensions requires rebuilding compatible knowledge vectors. Startup/provider calls may incur charges; import does not call providers.
 

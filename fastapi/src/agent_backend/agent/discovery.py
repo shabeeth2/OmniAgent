@@ -18,7 +18,7 @@ def catalog_descriptions(registry):
     return {**{row['id']: row['description'] for row in catalog_operations()}, **ToolDiscovery.describe(registry)}
 
 class ToolDiscovery:
-    def __init__(self, registry, embeddings=None, dimensions=1536, descriptions=None, cache_path=None, embedding_id=None):
+    def __init__(self, registry, embeddings=None, dimensions=1024, descriptions=None, cache_path=None, embedding_id=None):
         self.registry = registry
         if cache_path is not None:
             embeddings = embeddings or create_embeddings(dimensions)

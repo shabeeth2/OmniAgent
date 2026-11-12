@@ -46,7 +46,7 @@ def load_documents(directory: Path) -> list[Document]:
     return documents
 
 
-def ingest(directory: Path, embeddings: Embeddings | None = None, dimensions: int = 1536) -> InMemoryStore:
+def ingest(directory: Path, embeddings: Embeddings | None = None, dimensions: int = 1024) -> InMemoryStore:
     documents = load_documents(directory)
     store = create_store(embeddings, dimensions)
     store.batch([PutOp(NAMESPACE, str(number), {"text": document.page_content, **document.metadata})
@@ -58,7 +58,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--docs", type=Path, default=BACKEND_DIR / "sample_docs")
     parser.add_argument("--query", help="Query the ingested store before the process exits.")
-    parser.add_argument("--dimensions", type=int, default=1536, help="Embedding model dimensions.")
+    parser.add_argument("--dimensions", type=int, default=1024, help="Embedding model dimensions.")
     args = parser.parse_args()
     try:
         store = ingest(args.docs, dimensions=args.dimensions)

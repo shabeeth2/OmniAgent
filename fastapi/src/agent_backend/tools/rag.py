@@ -5,8 +5,8 @@ from typing import Annotated
 
 from langchain.tools import tool
 from langchain_core.embeddings import Embeddings
+import httpx
 import json
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langgraph.store.memory import InMemoryStore
 from pydantic import BaseModel, Field, SecretStr, StringConstraints
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -18,29 +18,46 @@ NAMESPACE = ("knowledge",)
 class RagSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=BACKEND_DIR / ".env", extra="ignore")
 
-    gemini_embedding_model: str = Field(min_length=1)
-    gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
-    gemini_api_key: SecretStr
+    jina_embedding_model: str = Field(min_length=1)
+    jina_base_url: str = Field(min_length=1)
+    jina_api_key: SecretStr
 
 
-def create_embeddings(dimensions: int = 1536) -> Embeddings:
+EMBEDDING_DIMENSIONS = 1024
+
+
+def create_embeddings(dimensions: int = EMBEDDING_DIMENSIONS) -> Embeddings:
     settings = RagSettings()
-    return GoogleGenerativeAIEmbeddings(
-        model=settings.gemini_embedding_model, google_api_key=settings.gemini_api_key, vertexai=False,
-        base_url=settings.gemini_base_url, output_dimensionality=dimensions,
-        # None selects SDK defaults: RETRIEVAL_DOCUMENT for documents, RETRIEVAL_QUERY for queries.
-        task_type=None, request_options={"timeout": 30},
-    )
+    return JinaEmbeddings(settings.jina_embedding_model, settings.jina_base_url,
+                          settings.jina_api_key.get_secret_value(), dimensions)
+
+
+class JinaEmbeddings(Embeddings):
+    def __init__(self, model, base_url, api_key, dimensions):
+        self.model, self.base_url, self.api_key, self.dimensions = model, base_url, api_key, dimensions
+
+    def _embed(self, texts, task):
+        response = httpx.post(self.base_url, headers={
+            "Authorization": f"Bearer {self.api_key}", "Accept": "application/json",
+        }, json={"model": self.model, "input": texts, "task": task,
+                "dimensions": self.dimensions, "normalized": True}, timeout=30)
+        response.raise_for_status()
+        return [row["embedding"] for row in sorted(response.json()["data"], key=lambda row: row["index"])]
+
+    def embed_documents(self, texts):
+        return self._embed(texts, "retrieval.passage")
+
+    def embed_query(self, text):
+        return self._embed([text], "retrieval.query")[0]
 
 
 def embedding_identity(embeddings):
-    if not isinstance(embeddings, GoogleGenerativeAIEmbeddings):
+    if not isinstance(embeddings, JinaEmbeddings):
         raise ValueError("Provide embedding_id when caching custom embeddings")
-    return json.dumps(["langchain-google-genai-v1", embeddings.model, embeddings.base_url,
-                       embeddings.output_dimensionality, "RETRIEVAL_DOCUMENT", "RETRIEVAL_QUERY"], separators=(",", ":"))
+    return json.dumps(["jina-v1", embeddings.model, embeddings.base_url, embeddings.dimensions], separators=(",", ":"))
 
 
-def create_store(embeddings: Embeddings | None = None, dimensions: int = 1536) -> InMemoryStore:
+def create_store(embeddings: Embeddings | None = None, dimensions: int = EMBEDDING_DIMENSIONS) -> InMemoryStore:
     return InMemoryStore(index={
         "dims": dimensions,
         "embed": embeddings if embeddings is not None else create_embeddings(dimensions),

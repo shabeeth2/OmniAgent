@@ -4,7 +4,7 @@
 
 This proposal answers the supplied Scalable Agentic System epic. The epic is acceptance criteria, not runtime instructions. Its source asks for an architecture; this repository adds a runnable, local demonstration. Numeric limits and evaluation gates below are project assumptions, not assignment requirements.
 
-The current implementation uses FastAPI, LangGraph, LangChain tool schemas, an OpenAI-compatible chat endpoint, Gemini embeddings, and a Next.js interface. It is a single-user, single-process loopback demo. PayPal records and invoice writes are **simulated**; no PayPal credentials, real invoice delivery, or payment execution are implemented. Enabled API/MCP connections can make real external calls. Writes and unknown effects require explicit per-call decisions in one batch review per model turn; trusted read classifications are approval-free.
+The current implementation uses FastAPI, LangGraph, LangChain tool schemas, an OpenAI-compatible chat endpoint, Jina embeddings, and a Next.js interface. It is a single-user, single-process loopback demo. PayPal records and invoice writes are **simulated**; no PayPal credentials, real invoice delivery, or payment execution are implemented. Enabled API/MCP connections can make real external calls. Writes and unknown effects require explicit per-call decisions in one batch review per model turn; trusted read classifications are approval-free.
 
 The versioned [PayPal catalog](../fastapi/src/agent_backend/catalog/paypal-v1.json) contains 72 operation descriptors generated from six official PayPal OpenAPI specifications at revision `90e8041ffe02d80c452d2b476bedd59a8d219bdc`. Each descriptor records method, path, schema reference, upstream source, content hash, version, and `executable: false`. These are provenance-backed metadata, not 72 working integrations or complete imported argument schemas. Executable demo handlers have separate validated schemas.
 
@@ -112,7 +112,7 @@ Call `paypal_list_transactions` for every `next_page` until null, then add Decim
 
 ## Separate specialist tools
 
-`retrieve_knowledge(query)` answers documentation questions. Startup ingests local `.md`, `.txt` and `.pdf` documents using Docling structural chunks into the `knowledge` namespace. Gemini embeds document text and queries. For “How quickly does support respond?”, retrieve at most four excerpts, return source/page citations where available, and base the answer on those excerpts. Missing knowledge produces an explicit unavailable result. Retrieval relevance is not proof of factual support: the model must cite supporting text and acknowledge gaps. The sample policies are fictional. No upload endpoint, scheduled refresh, durable knowledge index or document-level access control is implemented.
+`retrieve_knowledge(query)` answers documentation questions. Startup ingests local `.md`, `.txt` and `.pdf` documents using Docling structural chunks into the `knowledge` namespace. Jina embeds document text and queries. For “How quickly does support respond?”, retrieve at most four excerpts, return source/page citations where available, and base the answer on those excerpts. Missing knowledge produces an explicit unavailable result. Retrieval relevance is not proof of factual support: the model must cite supporting text and acknowledge gaps. The sample policies are fictional. No upload endpoint, scheduled refresh, durable knowledge index or document-level access control is implemented.
 
 `system_search` is a distinct introspection tool with two modes:
 
@@ -145,7 +145,7 @@ A custom Python loop is a plausible simpler alternative for discovery → valida
 
 An in-memory vector store with a SQLite embedding cache keeps local setup small and permits isolated tests. A persistent vector database or PostgreSQL/pgvector would add durable shared indexing, metadata filtering and worker reuse, at the cost of deployment, migration and index-version management. Adopt it based on measured catalog/tenant size and latency, not a presumption that 100 tools require a new service. Pure lexical search avoids embedding cost but misses paraphrases; pure semantic search can confuse similar business actions. The hybrid is an initial heuristic requiring representative evaluation.
 
-Docling preserves document structure and available page citations, but adds local model/dependency footprint and possible first-use asset downloads. Hosted retrieval reduces that runtime footprint while introducing provider data handling/cost and access-control decisions. Gemini embeddings and the chat provider are independently configured; their availability, cost and data policies are deployment decisions, not assignment mandates.
+Docling preserves document structure and available page citations, but adds local model/dependency footprint and possible first-use asset downloads. Hosted retrieval reduces that runtime footprint while introducing provider data handling/cost and access-control decisions. Jina embeddings and the chat provider are independently configured; their availability, cost and data policies are deployment decisions, not assignment mandates.
 
 ## Observability and quality
 
@@ -153,7 +153,7 @@ Persist request identities, statuses, call IDs, tool IDs, arguments/result previ
 
 LangSmith or equivalent OpenTelemetry tracing can add distributed spans for discovery, model, approval and execution in production. Do not export raw business text or credentials by default. Measure candidate recall@5, wrong-service selection, parameter validity, unavailable-tool execution attempts, end-to-end task correctness, false completeness, approval/restart behavior, cache misses, query/index latency, model usage and cost. Use held-out paraphrases, real catalog overlaps, negative/ambiguous queries, adversarial retrieved text and provider failures. Report per-service and per-size results, not just an average.
 
-The 95% retrieval target is a project assumption. The evaluation harness defaults to offline discovery smoke tests; `--mode discovery` opts into paid Gemini retrieval evaluation and `--mode tasks` opts into ten live workflow checks with programmatic answer and trace assertions. All task checks must pass. Neither paid mode has run. Scripted models verify execution/state mechanics, not live model reasoning. See [measured offline results](evaluation-results.json) and [validation](validation.md).
+The 95% retrieval target is a project assumption. The evaluation harness defaults to offline discovery smoke tests; `--mode discovery` opts into paid Jina retrieval evaluation and `--mode tasks` opts into ten live workflow checks with programmatic answer and trace assertions. All task checks must pass. Neither paid mode has run. The live discovery harness still requests 1536 dimensions; align it with the current 1024-dimensional runtime before evaluation. Scripted models verify execution/state mechanics, not live model reasoning. See [measured offline results](evaluation-results.json) and [validation](validation.md).
 
 ## Migration and deployment boundary
 

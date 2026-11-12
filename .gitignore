@@ -1,2 +1,4 @@
 .kilo/
 temp/
+fastapi/data/*.db-shm
+fastapi/data/*.db-wal
