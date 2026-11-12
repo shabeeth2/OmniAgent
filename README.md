@@ -71,6 +71,7 @@ Also try “How quickly does support respond?” for cited knowledge retrieval, 
 
 ## Documentation and checks
 
+- [omniAgent walkthrough — silent, 60-second MP4](docs/media/omniAgent.mp4). The recording uses offline fixture data and simulated PayPal actions.
 - [Assignment overview](docs/project-overview.md) and [shareable PDF](output/pdf/project-overview.pdf)
 - [Detailed architecture, trade-offs, and evidence](docs/scalable-agentic-system.md)
 - [Backend setup, API/SSE contract, and state](fastapi/README.md)

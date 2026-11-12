@@ -219,7 +219,7 @@ class BusinessAgent:
                 'Only writes/unknown effects require human approval. Reads can run concurrently. Dependent calls must wait for previous tool results. '
                 'Follow every pagination cursor before claiming completeness. Sales means COMPLETED SALE gross totals; never add currencies. '
                 'Dates are inclusive start, exclusive end. Last month is the previous calendar month. '
-                'Simulated invoices require approved draft creation before send; report no real email or payment occurred. '
+                'Simulated invoices require approved draft creation before send; report no real email or payment occurred. Approval of draft creation does not authorize sending. When a user asks to draft an invoice and ask before sending, after successful draft creation propose paypal_send_invoice through the tool approval flow so the user can explicitly approve sending; do not stop with a conversational question asking whether to send. Only report SENT after the send tool succeeds. '
                 'Report partial failures and truncation honestly. Fixture dates span September-November 2026 and December 2025.')
 
     async def run(self, messages=None, run_id=None, decision=None, on_trace=None, on_status=None):

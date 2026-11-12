@@ -5,6 +5,8 @@ Run from fastapi: .venv/Scripts/python scripts/browser_demo.py
 """
 import json
 import re
+import os
+import time
 from contextlib import asynccontextmanager
 from decimal import Decimal
 from pathlib import Path
@@ -41,6 +43,10 @@ class FixtureModel(BaseChatModel):
         return self
 
     def _generate(self, messages, stop=None, run_manager=None, **kwargs):
+        # Optional editorial hold for capturing the actual submitted-card UI.
+        # Default is zero; this is never used by the production runtime.
+        if isinstance(messages[-1], ToolMessage) and messages[-1].name in ('paypal_create_invoice', 'paypal_send_invoice'):
+            time.sleep(min(6, max(0, float(os.getenv('AGENT_FIXTURE_CAPTURE_DELAY', '0')))))
         return ChatResult(generations=[ChatGeneration(message=self.scripted_response(messages))])
 
     def scripted_response(self, messages):
@@ -103,7 +109,10 @@ class FixtureModel(BaseChatModel):
                 if draft:
                     return call('paypal_send_invoice', {'invoice_id':draft['invoice_id']})
                 email = re.search(r'[^\s@]+@[^\s@]+\.[^\s@]+', request)[0].rstrip('.?,')
-                return call('paypal_create_invoice', {'recipient':email, 'amount':'50.00', 'currency':'USD'})
+                money = re.search(r'\b(usd|eur|inr|gbp)\s+(\d+(?:\.\d{1,2})?)\b', request)
+                if not money:
+                    return final('What amount and currency should I use? This is a simulation.')
+                return call('paypal_create_invoice', {'recipient':email, 'amount':f'{Decimal(money[2]):.2f}', 'currency':money[1].upper()})
             if 'sales' in request:
                 return call('paypal_list_transactions', {'start_date':'2026-10-01','end_date':'2026-11-01','page':1})
             resolved = next((json.loads(m.content) for m in results if m.name == 'paypal_resolve_user'), None)
@@ -113,7 +122,7 @@ class FixtureModel(BaseChatModel):
         if last.name == 'paypal_create_invoice':
             return call('system_search', {'query':'Send the previously created PayPal invoice by invoice ID'})
         if last.name == 'paypal_send_invoice':
-            return final(f"Simulated invoice {data['invoice_id']}: USD {data['amount']}, {data['status']}. No real email or payment was sent.")
+            return final(f"Simulated invoice {data['invoice_id']}: {data['currency']} {data['amount']}, {data['status']}. No real email or payment was sent.")
         if last.name == 'paypal_list_transactions':
             if data['next_page']:
                 return call('paypal_list_transactions', {'start_date':'2026-10-01','end_date':'2026-11-01','page':data['next_page']})

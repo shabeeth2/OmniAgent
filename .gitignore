@@ -2,3 +2,6 @@
 temp/
 fastapi/data/*.db-shm
 fastapi/data/*.db-wal
+
+# Local video authoring project; the final MP4 is kept under docs/media/.
+/omniagent-demo/
