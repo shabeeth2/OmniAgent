@@ -1,0 +1,247 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-surface: var(--surface);
+  --color-field: var(--field);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-hover: var(--hover);
+  --color-hover-2: var(--hover-2);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-tint: var(--accent-tint);
+  --radius-control: 8px;
+  --radius-chip: 6px;
+  --radius-card: 16px;
+  --radius-window: 18px;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+:root {
+  --radius: 0.5rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --ink: oklch(0.145 0 0);
+  --ink-2: oklch(0.42 0 0);
+  --ink-3: oklch(0.51 0 0);
+  --surface: oklch(1 0 0);
+  --field: oklch(0.97 0 0);
+  --line: oklch(0.91 0 0);
+  --line-strong: oklch(0.82 0 0);
+  --hover: oklch(0.94 0 0);
+  --hover-2: oklch(0.94 0 0);
+  --accent-ink: oklch(0.4 0 0);
+  --accent-tint: oklch(0.97 0 0 / 0.5);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+}
+
+
+
+* {
+  border-color: var(--border);
+}
+
+/* Polish guided by unslop, Damir Sokolovsky (@heydamir), CC BY 4.0.
+   https://heydamir.design/unslop — shared control geometry. */
+button,
+.sidebar-glide-highlight {
+  border-radius: 8px;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes eq-bounce {
+  0%, 100% {
+    height: 100%;
+  }
+  50% {
+    height: 40%;
+  }
+}
+
+.shadow-card {
+  box-shadow: 0 1px 2px 0 oklch(0 0 0 / 0.05);
+}
+
+.shadow-raised {
+  box-shadow: 0 4px 6px -1px oklch(0 0 0 / 0.1), 0 2px 4px -2px oklch(0 0 0 / 0.1);
+}
+
+.shadow-hairline {
+  box-shadow: 0 1px 0 0 oklch(0 0 0 / 0.05);
+}
+
+/* Beautiful UI SidebarNav layout rules (MIT). */
+.sidebar-row {
+  width: 208px;
+  transition-duration: var(--sidebar-copy-duration);
+  transition-timing-function: var(--sidebar-easing);
+}
+
+.sidebar-copy {
+  opacity: 1;
+  transform: translateX(0);
+  transition:
+    opacity var(--sidebar-copy-duration) ease-out,
+    transform var(--sidebar-copy-duration) var(--sidebar-easing);
+}
+
+.sidebar-logo,
+.sidebar-collapse-control,
+.sidebar-expand-control {
+  transition-duration: var(--sidebar-copy-duration);
+  transition-timing-function: ease-out;
+}
+
+.sidebar-expand-control {
+  pointer-events: none;
+  opacity: 0;
+}
+
+.sidebar-glide-highlight {
+  right: 8px;
+  left: 8px;
+}
+
+[data-sidebar-collapsed="true"] .sidebar-row {
+  width: 36px;
+}
+
+[data-sidebar-collapsed="true"] .sidebar-copy {
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(calc(var(--sidebar-copy-offset) * -1));
+}
+
+[data-sidebar-collapsed="true"] .sidebar-logo,
+[data-sidebar-collapsed="true"] .sidebar-collapse-control {
+  pointer-events: none;
+  opacity: 0;
+}
+
+[data-sidebar-collapsed="true"] .sidebar-expand-control {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+[data-sidebar-collapsed="true"] .sidebar-glide-highlight {
+  right: auto;
+  width: 36px;
+}
+
+
+
+.chat-shell button { cursor: pointer; }
+.chat-shell button:disabled { cursor: not-allowed; }
+.chat-shell button:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.live-prompt textarea { min-height: 32px; max-height: 160px; padding: 6px 12px; font-size: 14px; line-height: 20px; }
+.live-prompt > div > .relative {
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px oklch(0 0 0 / .05);
+}
+.live-prompt textarea:focus-visible { outline: none; }
+.live-prompt:focus-within > div > .relative { border-color: var(--ring); }
+.live-prompt [aria-label="Send"] { width: 32px; height: 32px; }
+.shadow-overlay { box-shadow: 0 0 0 1px var(--line), 0 8px 24px oklch(0 0 0 / .08); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
+/* Shared dark surfaces for shadcn and Beautiful UI components. */
+.dark {
+  color-scheme: dark;
+  --radius: 1rem;
+  --background: #080808;
+  --foreground: #ededed;
+  --card: #111111;
+  --card-foreground: #ededed;
+  --popover: #111111;
+  --popover-foreground: #ededed;
+  --primary: #ededed;
+  --primary-foreground: #111111;
+  --secondary: #181818;
+  --secondary-foreground: #ededed;
+  --muted: #111111;
+  --muted-foreground: #a1a1a1;
+  --accent: #1a1a1a;
+  --accent-foreground: #ededed;
+  --border: #242424;
+  --input: #242424;
+  --ring: #737373;
+  --ink: #ededed;
+  --ink-2: #c7c7c7;
+  --ink-3: #a1a1a1;
+  --surface: #111111;
+  --field: #181818;
+  --line: #242424;
+  --line-strong: #383838;
+  --hover: #191919;
+  --hover-2: #202020;
+  --accent-ink: #d4d4d4;
+  --accent-tint: #1a1a1a;
+}
+.dark .live-prompt > div > .relative { box-shadow: none; }
+.chat-shell header { background: var(--background); }
+
+/* The supplied question card uses pill actions within its own footer. */
+.clarification-card footer button { border-radius: 9999px; }
