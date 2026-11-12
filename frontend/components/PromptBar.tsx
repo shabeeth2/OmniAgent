@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 
 export default function PromptBar({
   placeholder,
@@ -17,23 +17,25 @@ export default function PromptBar({
   const controls = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
 
-  useLayoutEffect(() => {
+  const resize = useCallback(() => {
     const textarea = input.current;
+    if (!textarea) return;
+    textarea.style.height = "0px";
+    const height = textarea.scrollHeight;
+    textarea.style.height = `${Math.min(Math.max(height, 32), 160)}px`;
+    textarea.style.overflowY = height > 160 ? "auto" : "hidden";
+  }, []);
+
+  useLayoutEffect(() => {
     const container = controls.current;
-    if (!textarea || !container) return;
-
-    const resize = () => {
-      textarea.style.height = "0px";
-      const height = textarea.scrollHeight;
-      textarea.style.height = `${Math.min(Math.max(height, 32), 160)}px`;
-      textarea.style.overflowY = height > 160 ? "auto" : "hidden";
-    };
-
+    if (!container) return;
     resize();
     const observer = new ResizeObserver(resize);
     observer.observe(container);
     return () => observer.disconnect();
-  }, [draft]);
+  }, [resize]);
+
+  useLayoutEffect(resize, [draft, resize]);
 
   function send() {
     const message = draft.trim();

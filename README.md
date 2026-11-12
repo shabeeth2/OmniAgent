@@ -33,7 +33,7 @@ cd fastapi
 uv sync --locked --python 3.13
 ```
 
-Create `fastapi/.env` with your settings:
+Create `backend/.env` with your settings:
 
 ```dotenv
 AGENT_MODEL=your-tool-calling-chat-model
@@ -45,7 +45,7 @@ JINA_BASE_URL=https://api.jina.ai/v1/embeddings
 # Optional: CONTEXT_BUDGET=64000
 ```
 
-From `fastapi/`, start the backend. Startup ingests sample documents and builds indexes; provider calls can incur charges.
+From `backend/`, start the backend. Startup ingests sample documents and builds indexes; provider calls can incur charges.
 
 ```powershell
 uv run --python 3.13 uvicorn agent_backend.main:app --reload --host 127.0.0.1 --port 8000
@@ -74,7 +74,11 @@ Also try “How quickly does support respond?” for cited knowledge retrieval, 
 - [omniAgent walkthrough — silent, 60-second MP4](docs/media/omniAgent.mp4). The recording uses offline fixture data and simulated PayPal actions.
 - [Assignment overview](docs/project-overview.md) and [shareable PDF](output/pdf/project-overview.pdf)
 - [Detailed architecture, trade-offs, and evidence](docs/scalable-agentic-system.md)
-- [Backend setup, API/SSE contract, and state](fastapi/README.md)
+- [Backend setup, API/SSE contract, and state](backend/README.md)
 - [Historical verification and limitations](docs/validation.md)
 
-Offline backend check, from `fastapi/`: `uv run --python 3.13 python -m unittest discover -s tests`. Frontend checks, from `nextjs/`: `npm test`, `npm run lint`, and `npm run build`; `npm run check:styles` requires a running frontend. Tests use isolated stores and fake providers. Historical test results do not establish live model quality or production scale.
+Offline backend check, from `backend/`: `uv run --python 3.13 python -m unittest discover -s tests`. Frontend checks, from `frontend/`: `npm test`, `npm run lint`, and `npm run build`; `npm run check:styles` requires a running frontend. Tests use isolated stores and fake providers. Historical test results do not establish live model quality or production scale.
+
+## SonarQube analysis
+
+The root `sonar-project.properties` covers backend Python and frontend TypeScript sources and tests. Install or provide SonarScanner, set `SONAR_HOST_URL` and `SONAR_TOKEN` for your SonarQube instance, and run `sonar-scanner` from the repository root. Select the built-in **Sonar way comprehensive** profiles for Python and TypeScript in the server's project settings. Quality profiles and gates are managed by SonarQube, not this file.

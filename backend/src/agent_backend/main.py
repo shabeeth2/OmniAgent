@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import asyncio
 
-from .database import engine
 from .routers import chat, tool_registry
 
 
@@ -20,8 +19,7 @@ async def lifespan(app: FastAPI):
         app.state.business_agent = await asyncio.to_thread(build_business_agent, saver)
         app.state.registry_agent_manager = RegistryAgentManager(app.state.business_agent)
         # Running requests cannot be safely replayed after an unclean shutdown.
-        from .models import AgentRun, ToolTrace, RequestRecord
-        from .models import Message
+        from .models import AgentRun, Message, RequestRecord, ToolTrace
         from .utils.history import backfill_requests
         from .database import SessionLocal
         with SessionLocal() as db:

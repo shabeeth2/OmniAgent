@@ -41,8 +41,8 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 }
 
 :root {
@@ -85,8 +85,8 @@
   border-color: var(--border);
 }
 
-/* Polish guided by unslop, Damir Sokolovsky (@heydamir), CC BY 4.0.
-   https://heydamir.design/unslop — shared control geometry. */
+/* Visual spacing guidance adapted from unslop by Damir Sokolovsky (@heydamir).
+   CC BY 4.0: https://creativecommons.org/licenses/by/4.0/ */
 button,
 .sidebar-glide-highlight {
   border-radius: 8px;

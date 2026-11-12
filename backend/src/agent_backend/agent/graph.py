@@ -248,7 +248,7 @@ class BusinessAgent:
                 pause = state['__interrupt__'][0]
                 if pause.value.get('kind') == 'clarification':
                     return Outcome('awaiting_input', clarification={'clarification_id': pause.id, 'questions': pause.value['questions']})
-                calls = self._approval_calls(state, pause)
+                calls = self._approval_calls(state)
                 for call in calls:
                     emit(call, 'awaiting_approval')
                 return Outcome('awaiting_approval', approval={'approval_id': pause.id, 'calls': [
@@ -274,7 +274,7 @@ class BusinessAgent:
             for variable, token in reversed(tokens):
                 variable.reset(token)
 
-    def _approval_calls(self, state, pause=None):
+    def _approval_calls(self, state):
         last = next((m for m in reversed(state['messages']) if isinstance(m, AIMessage) and m.tool_calls), None)
         return [c for c in last.tool_calls if c['name'] in self.registry and self.needs_approval(c['name'])] if last else []
 
