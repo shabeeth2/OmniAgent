@@ -1,0 +1,129 @@
+{
+  "mode": "offline_hash_smoke",
+  "limitations": "Synthetic distractors; offline hashes do not measure semantic-model or live-agent quality.",
+  "target_recall_at_5": 0.95,
+  "target_is_project_assumption": true,
+  "results": [
+    {
+      "catalog_size": 50,
+      "queries": 20,
+      "recall_at_5": 0.95,
+      "mean_query_ms": 16.827,
+      "index_ms": 4.603,
+      "embedding_document_calls": 50,
+      "embedding_query_calls": 22,
+      "unavailable_candidate_remains_non_executable": true,
+      "ambiguous_candidates": [
+        "square_create_invoice",
+        "stripe_create_invoice",
+        "merchant_directory_create_invoice",
+        "paypal_create_invoice",
+        "get_invoice"
+      ],
+      "misses": [
+        {
+          "query": "Read single invoice details",
+          "target": "get_invoice",
+          "candidates": [
+            "catalog_paypal_invoicing_v2_invoices_get",
+            "catalog_paypal_invoicing_v2_invoices_remind",
+            "merchant_directory_create_invoice",
+            "merchant_directory_list_invoices",
+            "catalog_paypal_invoicing_v2_invoices_delete"
+          ]
+        }
+      ]
+    },
+    {
+      "catalog_size": 100,
+      "queries": 20,
+      "recall_at_5": 0.95,
+      "mean_query_ms": 3.033,
+      "index_ms": 7.053,
+      "embedding_document_calls": 100,
+      "embedding_query_calls": 22,
+      "unavailable_candidate_remains_non_executable": true,
+      "ambiguous_candidates": [
+        "square_create_invoice",
+        "stripe_create_invoice",
+        "merchant_directory_create_invoice",
+        "paypal_create_invoice",
+        "get_invoice"
+      ],
+      "misses": [
+        {
+          "query": "Read single invoice details",
+          "target": "get_invoice",
+          "candidates": [
+            "catalog_paypal_invoicing_v2_invoices_get",
+            "catalog_paypal_invoicing_v2_invoices_remind",
+            "merchant_directory_create_invoice",
+            "merchant_directory_list_invoices",
+            "catalog_paypal_invoicing_v2_invoices_delete"
+          ]
+        }
+      ]
+    },
+    {
+      "catalog_size": 500,
+      "queries": 20,
+      "recall_at_5": 0.95,
+      "mean_query_ms": 11.297,
+      "index_ms": 32.54,
+      "embedding_document_calls": 500,
+      "embedding_query_calls": 22,
+      "unavailable_candidate_remains_non_executable": true,
+      "ambiguous_candidates": [
+        "square_create_invoice",
+        "stripe_create_invoice",
+        "merchant_directory_create_invoice",
+        "paypal_create_invoice",
+        "get_invoice"
+      ],
+      "misses": [
+        {
+          "query": "Read single invoice details",
+          "target": "get_invoice",
+          "candidates": [
+            "catalog_paypal_invoicing_v2_invoices_get",
+            "catalog_paypal_invoicing_v2_invoices_remind",
+            "merchant_directory_create_invoice",
+            "merchant_directory_list_invoices",
+            "zendesk_operation_291"
+          ]
+        }
+      ]
+    },
+    {
+      "catalog_size": 1000,
+      "queries": 20,
+      "recall_at_5": 0.95,
+      "mean_query_ms": 23.246,
+      "index_ms": 70.162,
+      "embedding_document_calls": 1000,
+      "embedding_query_calls": 22,
+      "unavailable_candidate_remains_non_executable": true,
+      "ambiguous_candidates": [
+        "square_create_invoice",
+        "stripe_create_invoice",
+        "merchant_directory_create_invoice",
+        "paypal_create_invoice",
+        "get_invoice"
+      ],
+      "misses": [
+        {
+          "query": "Read single invoice details",
+          "target": "get_invoice",
+          "candidates": [
+            "catalog_paypal_invoicing_v2_invoices_get",
+            "catalog_paypal_invoicing_v2_invoices_remind",
+            "merchant_directory_create_invoice",
+            "merchant_directory_list_invoices",
+            "zendesk_operation_291"
+          ]
+        }
+      ]
+    }
+  ],
+  "passed": true
+}

@@ -1,0 +1,8 @@
+ExampleCo support policy (fictional sample)
+
+Support responds to standard requests within two business days.
+Include the affected workspace, a description of the problem, and steps to
+reproduce it. Never include passwords or API keys in a support request.
+
+For a service outage, contact the on-call engineer immediately. Standard support
+hours are Monday through Friday, 09:00 to 17:00 UTC.
