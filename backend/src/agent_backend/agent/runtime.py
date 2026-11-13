@@ -3,7 +3,7 @@ import asyncio
 import logging
 from copy import deepcopy
 from langchain_openai import ChatOpenAI
-from pydantic import SecretStr, Field
+from pydantic import SecretStr, Field, AliasChoices, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from ..tools.rag import BACKEND_DIR, create_retrieval_tool, create_store
 from ..ingest import ingest
@@ -13,11 +13,16 @@ from .discovery import ToolDiscovery, catalog_descriptions
 from .graph import BusinessAgent
 
 class AgentSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=BACKEND_DIR / '.env', extra='ignore')
-    agent_model: str = Field(min_length=1)
+    model_config = SettingsConfigDict(env_file=BACKEND_DIR / '.env', extra='ignore', populate_by_name=True)
+    agent_model: str = Field(min_length=1, validation_alias=AliasChoices('LLM_MODEL', 'AGENT_MODEL'))
     context_budget: int = Field(default=64000, ge=1000, le=1000000)
-    openai_base_url: str | None = None
-    openai_api_key: SecretStr
+    openai_base_url: str | None = Field(default=None, validation_alias=AliasChoices('LLM_BASE_URL', 'OPENAI_BASE_URL'))
+    openai_api_key: SecretStr = Field(validation_alias=AliasChoices('LLM_API_KEY', 'OPENAI_API_KEY'))
+
+    @field_validator('openai_base_url')
+    @classmethod
+    def default_endpoint(cls, value):
+        return value or None
 
 def build_business_agent(checkpointer=None, demo_path=None):
     settings = AgentSettings()

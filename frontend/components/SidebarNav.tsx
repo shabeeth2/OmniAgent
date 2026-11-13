@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Wrench } from "lucide-react";
 import GlideMenu from "@/components/primitives/GlideMenu";
+import LlmSettings from "@/components/LlmSettings";
 
 export type SidebarRecent = {
   id: string;
@@ -249,7 +250,8 @@ export default function SidebarNav({
           {!recents.length && <p className="sidebar-copy px-4 py-2 text-xs leading-5 text-muted-foreground">Your conversations will appear here</p>}
         </div>
 
-        <div className="mx-2 mt-4 w-[208px] border-t border-line pt-4" role="group" aria-label="User profile">
+        <LlmSettings />
+        <div className="mx-2 mt-2 w-[208px] border-t border-line pt-4" role="group" aria-label="User profile">
           <div className="flex h-10 items-center gap-3 px-2">
             <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full border border-line bg-field text-xs font-medium text-ink">Y</span>
             <div className="sidebar-copy min-w-0">

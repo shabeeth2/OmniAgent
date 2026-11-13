@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import asyncio
 
-from .routers import chat, tool_registry
+from .routers import chat, tool_registry, llm_settings
 
 
 @asynccontextmanager
@@ -16,8 +16,12 @@ async def lifespan(app: FastAPI):
     from .database import DB_PATH
     async with AsyncSqliteSaver.from_conn_string(str(DB_PATH.parent / 'agent-checkpoints.db')) as saver:
         await saver.setup()
-        app.state.business_agent = await asyncio.to_thread(build_business_agent, saver)
-        app.state.registry_agent_manager = RegistryAgentManager(app.state.business_agent)
+        try:
+            app.state.business_agent = await asyncio.to_thread(build_business_agent, saver)
+        except Exception:
+            # Keep settings reachable to repair missing credentials or provider failures.
+            app.state.business_agent = None
+        app.state.registry_agent_manager = RegistryAgentManager(app.state.business_agent) if app.state.business_agent else None
         # Running requests cannot be safely replayed after an unclean shutdown.
         from .models import AgentRun, Message, RequestRecord, ToolTrace
         from .utils.history import backfill_requests
@@ -68,6 +72,7 @@ app.add_middleware(
 
 app.include_router(chat.router, prefix="/api", tags=["chat"])
 app.include_router(tool_registry.router, prefix="/api")
+app.include_router(llm_settings.router, prefix="/api")
 
 
 @app.get("/")

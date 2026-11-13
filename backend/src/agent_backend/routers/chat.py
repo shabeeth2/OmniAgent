@@ -154,6 +154,8 @@ def run_stream(agent, run, db, history=None, decision=None):
 
 @router.post('/chat')
 async def chat_endpoint(request: ChatRequest, http_request: Request, db: Session = Depends(get_db)):
+    if getattr(http_request.app.state, 'business_agent', None) is None:
+        raise HTTPException(503, 'Configure the LLM and embeddings, then restart the app.')
     manager = getattr(http_request.app.state, 'registry_agent_manager', None)
     try:
         agent = await manager.snapshot() if manager else http_request.app.state.business_agent

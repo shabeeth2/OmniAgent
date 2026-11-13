@@ -8,7 +8,7 @@ from langchain_core.embeddings import Embeddings
 import httpx
 import json
 from langgraph.store.memory import InMemoryStore
-from pydantic import BaseModel, Field, SecretStr, StringConstraints
+from pydantic import BaseModel, Field, SecretStr, StringConstraints, AliasChoices
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parents[3]
@@ -16,11 +16,11 @@ NAMESPACE = ("knowledge",)
 
 
 class RagSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=BACKEND_DIR / ".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=BACKEND_DIR / ".env", extra="ignore", populate_by_name=True)
 
-    jina_embedding_model: str = Field(min_length=1)
-    jina_base_url: str = Field(min_length=1)
-    jina_api_key: SecretStr
+    jina_embedding_model: str = Field(min_length=1, validation_alias=AliasChoices('EMBEDDING_MODEL', 'JINA_EMBEDDING_MODEL'))
+    jina_base_url: str = Field(min_length=1, validation_alias=AliasChoices('EMBEDDING_BASE_URL', 'JINA_BASE_URL'))
+    jina_api_key: SecretStr = Field(validation_alias=AliasChoices('EMBEDDING_API_KEY', 'JINA_API_KEY'))
 
 
 EMBEDDING_DIMENSIONS = 1024

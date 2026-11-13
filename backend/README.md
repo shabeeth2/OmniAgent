@@ -4,6 +4,12 @@ Local single-user FastAPI/LangGraph demonstration of tool discovery, dependency-
 
 ## Setup
 
+For the whole app on Windows, run `.\run-app.bat` from the repository root. It installs/checks prerequisites and dependencies and launches both servers. Open [localhost:3000](http://localhost:3000), then click **Configure LLM** above the sidebar profile to save chat and embedding settings. Stop the existing servers and restart after saving. Keep one backend process on loopback.
+
+The backend can start without provider settings so the configuration UI and saved history remain available; chat returns 503 until settings are supplied and the backend is restarted. Saving settings does not call a provider. Startup with configured providers builds indexes and can incur charges.
+
+### Manual backend setup
+
 Use Python 3.13, pinned in `.python-version`, for the local Docling dependency stack. `pyproject.toml` requires `>=3.13,<3.14`.
 
 From `backend/`:
@@ -12,21 +18,21 @@ From `backend/`:
 uv sync --locked --python 3.13
 ```
 
-Create `.env` with your provider settings:
+Alternatively, create `.env` in `backend/` with your provider settings:
 
 ```dotenv
-AGENT_MODEL=your-tool-calling-chat-model
-OPENAI_API_KEY=your-chat-provider-key
+LLM_MODEL=your-tool-calling-chat-model
+LLM_API_KEY=your-chat-provider-key
 # Optional: an OpenAI-compatible chat endpoint
-# OPENAI_BASE_URL=https://your-provider.example/v1
-JINA_API_KEY=your-jina-key
-JINA_EMBEDDING_MODEL=jina-embeddings-v5-omni-small
-JINA_BASE_URL=https://api.jina.ai/v1/embeddings
+# LLM_BASE_URL=https://your-provider.example/v1
+EMBEDDING_API_KEY=your-embedding-provider-key
+EMBEDDING_MODEL=jina-embeddings-v5-omni-small
+EMBEDDING_BASE_URL=https://api.jina.ai/v1/embeddings
 # Optional serialized character budget, including schemas; not tokens
 CONTEXT_BUDGET=64000
 ```
 
-Chat and embeddings are independent. Embeddings use Jina's API with 1024 dimensions; `OPENAI_API_KEY` is for chat, not embeddings. Startup validates settings, ingests `sample_docs`, and builds the tool index; missing credentials/provider errors fail explicitly. Document text, tool descriptions and discovery queries go to Jina; chat/tool results go to the chat provider. Provider usage can incur charges. Imports alone make no provider calls.
+Chat and embeddings are independent. Chat accepts an OpenAI-compatible endpoint; embeddings require the Jina-compatible API format with 1024 dimensions. `LLM_API_KEY` is for chat, not embeddings. The generic names do not change those protocol requirements. Existing `AGENT_MODEL`, `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `JINA_API_KEY`, `JINA_EMBEDDING_MODEL`, and `JINA_BASE_URL` remain supported as legacy aliases. Startup validates settings, ingests `sample_docs`, and builds the tool index when configured. Document text, tool descriptions and discovery queries go to the embedding provider; chat/tool results go to the chat provider. Provider usage can incur charges. Imports alone make no provider calls.
 
 ```powershell
 uv run --python 3.13 uvicorn agent_backend.main:app --reload --host 127.0.0.1 --port 8000
@@ -47,6 +53,8 @@ Requests allow three discovery calls, twelve model calls, twenty tool-call attem
 | Endpoint | Purpose |
 | --- | --- |
 | `POST /api/chat` | `{ "message": "...", "conversation_id": 1 }`; omit ID for a new conversation |
+| `GET /api/settings/llm` | Read model, endpoint, embedding and context settings, plus API-key presence flags; never returns saved keys |
+| `PUT /api/settings/llm` | Save local provider settings; blank/omitted replacement keys preserve existing keys; restart backend to apply |
 | `GET /api/conversations` | List saved conversations |
 | `GET /api/conversations/{id}` | Messages and saved ordered tool traces |
 | `DELETE /api/conversations/{id}` | Delete conversation |
@@ -61,6 +69,8 @@ Requests allow three discovery calls, twelve model calls, twenty tool-call attem
 | `POST /api/tool-registry/{id}/test` | Test with `{ "arguments": {} }` |
 
 Chat/resume responses are `text/event-stream`, ending `data: [DONE]\n\n`. Content events contain `{"content":"..."}`. Trace events contain `{"trace":{...}}`; update rows by stable trace ID across approval/resume. Approval pauses emit `{"approval_required":{...}}` followed by DONE. Stale/concurrent decisions and new messages on active/pending conversations return 409. Traces show execution activity, not private model reasoning.
+
+The settings payload uses `llm_model`, `llm_base_url`, `context_budget`, `embedding_model`, and `embedding_base_url`. Send optional `llm_api_key` and `embedding_api_key` only to replace keys. Responses use `llm_api_key_configured` and `embedding_api_key_configured` flags and `restart_required` to indicate whether a restart is needed. Settings persist in the local plaintext `.env`; protect it with OS permissions and never commit it.
 
 ## Saved state and restarts
 

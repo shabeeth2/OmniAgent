@@ -6,14 +6,14 @@ Local single-user demo: FastAPI + LangGraph agent and a Next.js chat/approval UI
 
 - `backend/`: uv project; supported runtime/pin **Python 3.13** (Docling dependency stack). From that directory: `uv sync --locked --python 3.13`; `uv run --python 3.13 uvicorn agent_backend.main:app --reload --host 127.0.0.1 --port 8000`.
 - `frontend/`: Next.js 16.4.6 App Router, Tailwind v4 and AI Elements. Run `npm install`, `npm run dev`. Dev/build scripts use **Webpack** (Turbopack not verified). Checks: `npm run lint`, `npm test`, `npm run check:styles`, `npm run build`. Note: `next dev` auto-adds a `BEGIN...END` agent-rules block in `frontend/AGENTS.md`; read `node_modules/next/dist/docs/` before writing code — APIs may differ from training data.
-- `run_app.cmd`: convenience launcher; use separate terminals if launcher shell handling fails.
+- `run-app.bat`: single-command launcher; installs dependencies and starts both local servers.
 
 Keep one backend process bound to loopback. There is no application authentication or multi-tenant authorization. Do not start additional workers as a scaling shortcut. Do not expose saved credentials or run paid/provider or external write evaluations without task authorization.
 
 ## Implementation map
 
 - `backend/src/agent_backend/main.py`: lifespan, additive migration, checkpoint saver, interrupted-run recovery, loopback CORS.
-- `agent/runtime.py`: independent chat/Gemini settings, startup knowledge ingestion, registry snapshot publication.
+- `agent/runtime.py`: chat settings, startup knowledge ingestion, registry snapshot publication.
 - `agent/graph.py`: LangChain create_agent with policy, native batched approvals, and model-limit middleware; exact-call approval and schema/selection gates.
 - `agent/discovery.py`: hybrid top-five retrieval and metadata catalog; `utils/`: shared budget, embedding-cache, history, and trace helpers. `scripts/evaluation.py` contains offline and opt-in evaluation tooling.
 - `catalog/paypal-v1.json`: 72 official, provenance-backed **nonexecutable** descriptors; local handlers use separate schemas.
@@ -25,7 +25,7 @@ Keep one backend process bound to loopback. There is no application authenticati
 
 ## Settings and state
 
-Backend `.env`: required `AGENT_MODEL`, `OPENAI_API_KEY`, `JINA_API_KEY`, `JINA_EMBEDDING_MODEL`, `JINA_BASE_URL`; optional `OPENAI_BASE_URL`, `CONTEXT_BUDGET`. Chat uses the OpenAI-compatible endpoint; knowledge and tool embeddings use Jina with 1024 dimensions. Frontend `NEXT_PUBLIC_FASTAPI_URL` defaults to `http://localhost:8000`.
+Backend `.env`: required for chat `LLM_MODEL`, `LLM_API_KEY`, `EMBEDDING_API_KEY`, `EMBEDDING_MODEL`, `EMBEDDING_BASE_URL`; optional `LLM_BASE_URL`, `CONTEXT_BUDGET`. Legacy `AGENT_MODEL`, `OPENAI_*`, and `JINA_*` names remain supported. Configure through the sidebar's **Configure LLM** form or edit the local `.env`; restart backend after saving. Without complete settings, setup/history remain available and chat returns 503. `GET/PUT /api/settings/llm` never returns saved keys; blank replacement keys preserve them. Chat uses the OpenAI-compatible endpoint; knowledge and tool embeddings use the Jina-compatible format with 1024 dimensions. Frontend `NEXT_PUBLIC_FASTAPI_URL` defaults to `http://localhost:8000`.
 
 `backend/data/`: `app.db` conversations/requests/traces, `agent-checkpoints.db` durable approvals, `paypal-demo.db` simulated records, `tool-embeddings.db` cached descriptions, and `tool-registry.json` plaintext local credentials. Preserve saved state. Knowledge vectors remain process-local and re-ingest at startup. Changing embedding identity/dimensions requires rebuilding compatible knowledge vectors. Startup/provider calls may incur charges; import does not call providers.
 
