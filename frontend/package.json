@@ -1,0 +1,46 @@
+{
+  "name": "agent-tool-scale-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
+    "start": "next start",
+    "lint": "eslint",
+    "check:styles": "node scripts/check-styles.mjs",
+    "test": "node scripts/check-chat.mjs && node scripts/check-chat-page.mjs && node scripts/check-tool-registry.mjs && node scripts/check-clarification.mjs && node scripts/check-presentation.mjs && node scripts/check-llm-settings.mjs",
+    "test:browser": "npm run build && playwright test"
+  },
+  "dependencies": {
+    "@a2ui/react": "0.15.0",
+    "@a2ui/web_core": "0.15.0",
+    "@radix-ui/react-dialog": "^1.3.1",
+    "@radix-ui/react-slot": "^1.5.0",
+    "@streamdown/cjk": "^1.0.4",
+    "@streamdown/code": "^2.0.0",
+    "@streamdown/math": "^1.0.3",
+    "@streamdown/mermaid": "^1.0.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.71.0",
+    "next": "16.4.6",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "recharts": "3.10.1",
+    "streamdown": "^2.7.1",
+    "tailwind-merge": "^3.7.0",
+    "use-stick-to-bottom": "^1.1.6",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.0",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.6",
+    "tailwindcss": "4.3.3",
+    "typescript": "^5"
+  }
+}

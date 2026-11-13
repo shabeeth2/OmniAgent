@@ -6,7 +6,7 @@ This proposal answers the supplied Scalable Agentic System epic. The epic is acc
 
 The current implementation uses FastAPI, LangGraph, LangChain tool schemas, an OpenAI-compatible chat endpoint, Jina embeddings, and a Next.js interface. It is a single-user, single-process loopback demo. PayPal records and invoice writes are **simulated**; no PayPal credentials, real invoice delivery, or payment execution are implemented. Enabled API/MCP connections can make real external calls. Writes and unknown effects require explicit per-call decisions in one batch review per model turn; trusted read classifications are approval-free.
 
-The versioned [PayPal catalog](../fastapi/src/agent_backend/catalog/paypal-v1.json) contains 72 operation descriptors generated from six official PayPal OpenAPI specifications at revision `90e8041ffe02d80c452d2b476bedd59a8d219bdc`. Each descriptor records method, path, schema reference, upstream source, content hash, version, and `executable: false`. These are provenance-backed metadata, not 72 working integrations or complete imported argument schemas. Executable demo handlers have separate validated schemas.
+The versioned [PayPal catalog](../backend/src/agent_backend/catalog/paypal-v1.json) contains 72 operation descriptors generated from six official PayPal OpenAPI specifications at revision `90e8041ffe02d80c452d2b476bedd59a8d219bdc`. Each descriptor records method, path, schema reference, upstream source, content hash, version, and `executable: false`. These are provenance-backed metadata, not 72 working integrations or complete imported argument schemas. Executable demo handlers have separate validated schemas.
 
 Implementation evidence is linked below. The reported offline hash benchmark achieved recall@5 of 95% on 20 labeled queries at each of 50, 100, 500 and 1000 descriptors. It includes overlapping synthetic cross-service distractors. Hash embeddings measure deterministic routing plumbing and lexical overlap; these results do **not** establish real semantic retrieval quality, provider latency, or task success. Paid live evaluation has not run. Completed offline, frontend and browser verification is recorded in [validation](validation.md). Live provider behavior remains unverified.
 
@@ -66,15 +66,15 @@ sequenceDiagram
     F-->>U: Content SSE + DONE
 ```
 
-[Graph state](../fastapi/src/agent_backend/agent/graph.py) stores messages, selected tool IDs, rejected signatures, framework model-call counts, discovery/execution counts, remaining active time, registry version, and failure flags. Native HumanInTheLoopMiddleware checkpoints pending batch approvals. Independent reads may execute concurrently; dependent operations wait for previous results. Selected tools are request-local; conversation text persists. SQLite checkpoints preserve compatible pending approvals and clarifications across restarts. Startup retires incompatible old-engine pauses with explicit failure, clears their pending cards, and preserves history without replaying effects. Request history is append-only, while the current-run record prevents concurrent work in one conversation. A registry change invalidates pending approvals rather than silently replacing the operation.
+[Graph state](../backend/src/agent_backend/agent/graph.py) stores messages, selected tool IDs, rejected signatures, framework model-call counts, discovery/execution counts, remaining active time, registry version, and failure flags. Native HumanInTheLoopMiddleware checkpoints pending batch approvals. Independent reads may execute concurrently; dependent operations wait for previous results. Selected tools are request-local; conversation text persists. SQLite checkpoints preserve compatible pending approvals and clarifications across restarts. Startup retires incompatible old-engine pauses with explicit failure, clears their pending cards, and preserves history without replaying effects. Request history is append-only, while the current-run record prevents concurrent work in one conversation. A registry change invalidates pending approvals rather than silently replacing the operation.
 
 Current assumptions: three discovery calls, five candidates per search, at most fifteen selected tools, twelve model calls, twenty tool-call attempts, and 45 seconds of active time. Human approval waiting is excluded. The default context budget is 64,000 serialized characters including disclosed schemas, **not tokens**; oldest whole turns are removed without breaking assistant/tool pairs. A tool-result preview is capped at 12,000 characters and explicitly marks truncation/incompleteness. These bounds prevent runaway work; they also make large-page workflows stop incomplete.
 
 ## Discovery and scaling
 
-[Discovery](../fastapi/src/agent_backend/agent/discovery.py) embeds operation descriptions and retrieves twenty semantic neighbors. It combines nonnegative semantic score and normalized lexical overlap with equal weight, sorts deterministically, and returns five descriptors including `executable`. Only registered executable candidates enter the model's selected-tool set. A metadata-only match remains visible as an unavailable capability; it cannot become executable by being mentioned in chat. The model always sees `system_search` and the knowledge specialist, plus selected schemas, rather than the entire catalog.
+[Discovery](../backend/src/agent_backend/agent/discovery.py) embeds operation descriptions and retrieves twenty semantic neighbors. It combines nonnegative semantic score and normalized lexical overlap with equal weight, sorts deterministically, and returns five descriptors including `executable`. Only registered executable candidates enter the model's selected-tool set. A metadata-only match remains visible as an unavailable capability; it cannot become executable by being mentioned in chat. The model always sees `system_search` and the knowledge specialist, plus selected schemas, rather than the entire catalog.
 
-The [embedding cache](../fastapi/src/agent_backend/utils/embedding_cache.py) keys description vectors by endpoint/model identity, dimension, and content. Restart rebuilds the in-memory index using cached vectors; changed descriptions embed again. Query vectors are not persisted. Changing embedding identity or dimensions creates distinct cache keys. The catalog version is attached to discovery/traces. Enabled registry updates publish immutable agent snapshots and retain the previous snapshot if rebuilding fails.
+The [embedding cache](../backend/src/agent_backend/utils/embedding_cache.py) keys description vectors by endpoint/model identity, dimension, and content. Restart rebuilds the in-memory index using cached vectors; changed descriptions embed again. Query vectors are not persisted. Changing embedding identity or dimensions creates distinct cache keys. The catalog version is attached to discovery/traces. Enabled registry updates publish immutable agent snapshots and retain the previous snapshot if rebuilding fails.
 
 | Catalog size | Current demonstration | Proposed growth step |
 | --- | --- | --- |
@@ -167,19 +167,19 @@ The matrix links implemented behavior and verification sources. [Validation](val
 
 | Requirement | Design/evidence |
 | --- | --- |
-| FR-01 Interpret intent | Request lifecycle and specialist boundaries; [specialist tests](../fastapi/tests/test_specialists.py) |
-| FR-02 Discover actions | Discovery and scaling; [discovery/cache tests](../fastapi/tests/test_discovery_scale.py) |
-| FR-03 Select tools | Ranked availability and selected-ID gate; [agent tests](../fastapi/tests/test_agent.py) |
-| FR-04 Valid calls | Invoice clarification/schema validation; [PayPal demo tests](../fastapi/tests/test_paypal_demo.py), [safety tests](../fastapi/tests/test_execution_safety.py) |
-| FR-05 Ordered workflows | Draft → approval → send, mapping → pages; [PayPal agent tests](../fastapi/tests/test_paypal_agent.py) |
-| FR-06 Knowledge | Distinct retrieve_knowledge; [RAG tests](../fastapi/tests/test_rag.py), [specialist tests](../fastapi/tests/test_specialists.py) |
-| FR-07 System queries | Capability/status examples; [request history tests](../fastapi/tests/test_request_history.py) |
-| FR-08 State | Graph/checkpoints/history; [approval tests](../fastapi/tests/test_approval.py) |
-| FR-09 Failure | Failure table and incomplete results; [agent tests](../fastapi/tests/test_agent.py), [safety tests](../fastapi/tests/test_execution_safety.py) |
-| FR-10 Results | Cited/explicit simulated answers and SSE; [chat tests](../fastapi/tests/test_chat_agent.py), [trace tests](../fastapi/tests/test_traces.py) |
+| FR-01 Interpret intent | Request lifecycle and specialist boundaries; [specialist tests](../backend/tests/test_specialists.py) |
+| FR-02 Discover actions | Discovery and scaling; [discovery/cache tests](../backend/tests/test_discovery_scale.py) |
+| FR-03 Select tools | Ranked availability and selected-ID gate; [agent tests](../backend/tests/test_agent.py) |
+| FR-04 Valid calls | Invoice clarification/schema validation; [PayPal demo tests](../backend/tests/test_paypal_demo.py), [safety tests](../backend/tests/test_execution_safety.py) |
+| FR-05 Ordered workflows | Draft → approval → send, mapping → pages; [PayPal agent tests](../backend/tests/test_paypal_agent.py) |
+| FR-06 Knowledge | Distinct retrieve_knowledge; [RAG tests](../backend/tests/test_rag.py), [specialist tests](../backend/tests/test_specialists.py) |
+| FR-07 System queries | Capability/status examples; [request history tests](../backend/tests/test_request_history.py) |
+| FR-08 State | Graph/checkpoints/history; [approval tests](../backend/tests/test_approval.py) |
+| FR-09 Failure | Failure table and incomplete results; [agent tests](../backend/tests/test_agent.py), [safety tests](../backend/tests/test_execution_safety.py) |
+| FR-10 Results | Cited/explicit simulated answers and SSE; [chat tests](../backend/tests/test_chat_agent.py), [trace tests](../backend/tests/test_traces.py) |
 | AC-01 Diagram | Component diagram includes all required boundaries |
 | AC-02 End-to-end | Sequence diagram and request lifecycle |
-| AC-03 Scale | 50/100/500/1000 table; [benchmark harness](../fastapi/scripts/evaluation.py); offline limits stated |
+| AC-03 Scale | 50/100/500/1000 table; [benchmark harness](../backend/scripts/evaluation.py); offline limits stated |
 | AC-04 Wrong calls | Selection/schema gates and ambiguity policy; safety tests above |
 | AC-05 Three scenarios | Invoice, completed sales and mapped dispute walkthroughs; PayPal tests above |
 | AC-06 RAG example | Separate specialist flow with citations/empty corpus behavior |
