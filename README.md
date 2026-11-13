@@ -1,6 +1,6 @@
-# Scalable Agentic System
+# OmniAgent - Scalable Agentic System
 
-A local chat demo for the Datazoic programming task: discover relevant tools from a large catalog, execute a validated sequence, and explain the result. The stack is Next.js, FastAPI, LangChain/LangGraph, SQLite, and Jina embeddings.
+A local chat: discover relevant tools from a large catalog, execute a validated sequence, and explain the result. The stack is Next.js, FastAPI, LangChain/LangGraph, SQLite, and Jina embeddings.
 
 The LLM starts with a few control tools and receives business tool schemas only after discovery. PayPal actions are **simulated**; the 72 official PayPal catalog descriptors are **metadata only**. Enabled external API/MCP connections can make real calls.
 
