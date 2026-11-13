@@ -1,6 +1,7 @@
 import json
 import tempfile
 import unittest
+from unittest.mock import patch
 from types import SimpleNamespace
 from pathlib import Path
 
@@ -37,9 +38,14 @@ class ClarificationTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(effects, ['EUR'])
 
     async def test_restart_and_answers_preserve_request_budget(self):
+        elapsed = [100.0]
+        clock = patch('agent_backend.agent.graph.time', SimpleNamespace(monotonic=lambda: elapsed[0]))
+        clock.start()
+        self.addCleanup(clock.stop)
         class RecordingModel(Model):
             async def ainvoke(self, messages):
                 object.__setattr__(self, 'messages', messages)
+                elapsed[0] += 0.25
                 return await super().ainvoke(messages)
         model = RecordingModel([call('ask_user', {'questions': QUESTIONS}), AIMessage(content='EUR selected')])
         with tempfile.TemporaryDirectory() as directory:
@@ -61,6 +67,7 @@ class ClarificationTest(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(after['executions'], 0)
                 self.assertLessEqual(after['remaining'], before['remaining'])
                 self.assertGreater(after['remaining'], before['remaining'] - 2)
+                self.assertAlmostEqual(before['remaining'] - after['remaining'], 0.25)
 
     async def test_clear_request_does_not_pause(self):
         model = Model([AIMessage(content='Hello')])

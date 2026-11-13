@@ -17,6 +17,7 @@ router = APIRouter(prefix="/tool-registry", tags=["tool-registry"])
 @router.get('/catalog')
 async def catalog(request: Request):
     from ..agent.graph import ask_user, system_search
+    from ..agent.presentation import present_ui
     manager = getattr(request.app.state, 'registry_agent_manager', None)
     try:
         agent = await manager.snapshot() if manager else request.app.state.business_agent
@@ -26,7 +27,7 @@ async def catalog(request: Request):
     executable = [{'name': tool.name, 'description': tool.description, 'origin': (tool.metadata or {}).get('origin', 'system'),
                    'executable': True, 'service': (tool.metadata or {}).get('service', 'business'),
                    'input_schema': tool.args, 'version': (tool.metadata or {}).get('version', '1')}
-                  for tool in [system_search, ask_user, *agent.registry.values()]]
+                  for tool in [system_search, ask_user, present_ui, *agent.registry.values()]]
     return executable + [{'name': row['id'], **row, 'origin': 'catalog'} for row in catalog_operations()]
 REGISTRY_PATH = Path(__file__).resolve().parents[3] / "data" / "tool-registry.json"
 _lock = Lock()

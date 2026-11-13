@@ -117,3 +117,45 @@ The default `--mode offline` makes no provider calls. The 95% retrieval target i
 ## Runtime retirement
 
 New requests use `langchain-batched-v1`. Startup fails incompatible old-engine pending approvals/questions with an explicit retirement explanation, clears their pending cards, and retains conversation, request and trace history. No retired call is replayed. Current-engine pending requests retain their checkpoints across restart. Historical engine-version columns and checkpoint files remain intact. See [the refactor contract](../docs/ultra-refactor.md).
+# Read-only generated visuals
+
+The built-in `present_ui` tool is always available without discovery or approval.
+It accepts a presentation with `title`, `source`, optional `incomplete` (default
+false), and a flat `components` tree rooted at the ID `root`. IDs must be unique;
+all nodes must be reachable without cycles or shared children. The versioned
+catalog is `urn:agent-tool-scale:read-only:v1`, using A2UI v0.9.1 semantics and
+the `v0.9` wire envelope.
+
+Supported components: `Row`/`Column` (`children` IDs), `Text` (`text`), `Metric`
+(`label`, `value` strings), `Table` (`columns`, rectangular `rows` of text or
+finite numbers), and `BarChart`/`LineChart` (`title`, `unit`, `points` with
+`label` and finite numeric `value`). Tables allow at most 12 columns. Each
+assistant message allows four surfaces, each with at most 50 components,
+200 rows/points per table/chart, and 128 KB of presentation input. Text fields
+are limited to 2,000 characters. Exceeding limits returns an error; data is
+never silently truncated. Call `present_ui` alone, after retrieving source data.
+
+Example tool arguments:
+
+```json
+{"title":"Monthly sales","source":"User supplied example","components":[{"id":"root","component":"BarChart","title":"Sales","unit":"USD","points":[{"label":"Sep","value":50},{"label":"Oct","value":75}]}]}
+```
+
+Business visuals must use retrieved data, follow every pagination cursor, label
+partial results, and keep currencies separate. User-supplied examples must be
+labeled. Schema validation checks structure, not factual accuracy.
+
+Chat and both resume endpoints may emit `data: {"ui_surfaces":[...]}\n\n`.
+This replaces the complete surface collection for the current assistant message;
+it is not an append event. The payload is committed to the message's nullable
+`ui_surfaces_json` column before emission. Conversation responses expose
+`ui_surfaces`, defaulting to `[]` for old messages. The additive migration keeps
+existing content and pauses intact. Surfaces also live in graph checkpoints;
+approval resume preserves them, while clarification resume starts a new
+assistant message with an empty collection.
+
+The frontend uses the versioned React A2UI renderer, a fixed local catalog, and
+Recharts. Charts include accessible data tables. Unknown or malformed surfaces
+show a local fallback. No generated executable code, resource URLs, forms,
+buttons, or backend action dispatch are supported. Presentation never authorizes
+an external effect; existing approval rules remain authoritative.

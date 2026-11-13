@@ -190,3 +190,48 @@ The matrix links implemented behavior and verification sources. [Validation](val
 | AC-11 Assumptions | Scope/evidence, budgets and deployment boundary explicitly distinguish proposal from implementation |
 
 Cancellation limitation: a synchronous knowledge embedding request already running in a worker thread may continue until its HTTP timeout after graph cancellation. The demo active-time limit does not guarantee immediate termination of that underlying request.
+# Generated read-only presentation surfaces
+
+The agent can call the always-available `present_ui` control to attach charts,
+tables, text, layout rows/columns, and metric cards to an assistant response.
+The backend validates a bounded tree and emits A2UI v0.9 messages for the fixed
+`urn:agent-tool-scale:read-only:v1` catalog. The Next.js renderer uses
+`@a2ui/react/v0_9`, `@a2ui/web_core/v0_9`, and Recharts; it validates saved and
+streamed payloads before processing them. Each visual owns its processor, so
+surface IDs cannot cross messages. A rendering error falls back locally.
+
+Graph checkpoints retain surfaces through approval pauses. SSE sends a complete
+replacement collection only after database persistence, and conversation GET
+responses restore those surfaces alongside Markdown. Clarification resumes
+start a fresh assistant message and surface collection. The engine identifier
+is unchanged because the added checkpoint field defaults to an empty list;
+existing compatible pauses do not require retirement.
+
+The first catalog is read-only: no actions, functions, executable UI, network
+resources, or generated forms. `present_ui` is reserved against external tool
+collisions and must run alone, bounding state updates to four surfaces per
+message. Each surface allows 50 components and each table/chart allows 200
+rows/points; invalid or oversized requests fail without truncation. The backend
+README specifies the full presentation contract. These checks do not prove
+that model-selected values reflect source data; source labeling, pagination,
+partial-result disclosure, and currency separation remain agent obligations.
+
+Offline verification uses fake providers and temporary stores. Run the backend
+unittest suite and frontend `npm test`, `npm run lint`, `npm run build`.
+`npm run test:browser` starts a loopback frontend on port 3100 and intercepts API
+calls with fixtures, without starting a backend or touching saved databases.
+Install its isolated browser once with `npx playwright install chromium`.
+The browser script builds and starts the production frontend. Windows defaults
+to installed Edge; other platforms default to Playwright Chromium. Set
+`PLAYWRIGHT_CHANNEL` to override the browser channel. Tests use an isolated
+profile and do not read the user's existing browser session.
+The browser checks cover desktop/mobile charts, accessible tables, reload,
+reused surface IDs, and malformed-surface fallback. `npm run check:styles --
+http://127.0.0.1:3100` checks a separately running frontend's compiled CSS.
+
+Verified on 2026-11-13: all 103 offline backend tests passed; frontend lint,
+regression scripts, TypeScript, and the Webpack production build passed. All
+three production-browser checks passed (compiled styles and desktop/mobile
+visual restoration/fallback). Screenshots were inspected at 1280px and 390px.
+No live provider evaluations or saved-database migrations were run. Dependency
+installation reported 19 npm audit advisories; remediation was outside this change.

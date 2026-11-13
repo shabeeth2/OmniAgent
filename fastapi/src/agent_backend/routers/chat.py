@@ -92,6 +92,14 @@ def run_stream(agent, run, db, history=None, decision=None):
                     break
                 yield event(value)
             outcome = await task
+            # Store before publishing so reload and SSE have the same surfaces.
+            surfaces = getattr(outcome, 'ui_surfaces', [])
+            assistant = db.get(Message, run.assistant_message_id)
+            had_surfaces = bool(assistant.ui_surfaces)
+            assistant.ui_surfaces_json = json.dumps(surfaces)
+            db.commit()
+            if surfaces or had_surfaces:
+                yield event({'ui_surfaces': surfaces})
             if outcome.status == 'awaiting_input':
                 payload = {'run_id': run.id, **outcome.clarification}
                 run.status = 'awaiting_input'

@@ -43,7 +43,7 @@ class GraphTest(unittest.IsolatedAsyncioTestCase):
         outcome = await agent.run([HumanMessage(content='last month')])
         self.assertEqual(outcome.status, 'completed')
         self.assertEqual(outcome.content, 'USD 125.50; EUR 20.00')
-        self.assertEqual(model.bound[0], ['system_search', 'ask_user'])
+        self.assertEqual(model.bound[0], ['system_search', 'ask_user', 'present_ui'])
         self.assertIn('aggregate_outstanding', model.bound[1])
 
     async def test_unselected_tool_is_rejected_before_execution(self):
@@ -112,7 +112,7 @@ class GraphTest(unittest.IsolatedAsyncioTestCase):
         agent = BusinessAgent(model, Discovery(), create_business_tools())
         outcome = await agent.run([HumanMessage(content='read it')])
         self.assertEqual(outcome.status, 'failed')
-        self.assertEqual(model.bound, [['system_search', 'ask_user']])
+        self.assertEqual(model.bound, [['system_search', 'ask_user', 'present_ui']])
 
     async def test_discovery_budget_is_reported(self):
         model = Model([call('system_search', {'query': 'unknown'}, str(i)) for i in range(4)] + [AIMessage(content='No capability.')])

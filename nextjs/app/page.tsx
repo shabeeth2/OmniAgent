@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowUpRight, Code2, Compass, Copy, Check, Menu, MessageSquare, PenLine, Plus, X } from "lucide-react";
+import Presentation from "@/components/Presentation";
 import ToolRegistry from "@/components/ToolRegistry";
 import ToolTraces from "@/components/ToolTraces";
 import SidebarNav from "@/components/SidebarNav";
@@ -14,7 +15,7 @@ import { Conversation, ConversationContent, ConversationScrollButton } from "@/c
 import { MessageResponse } from "@/components/ai-elements/message";
 import { sendChatMessage, getSavedConversationState, resumeApproval, resumeClarification, type Approval, type ApprovalSubmission, type ToolTrace, type Clarification, type ClarificationAnswer } from "@/lib/chat";
 
-type Message = { id: string; role: "user" | "assistant"; content: string; traces?: ToolTrace[] };
+type Message = { id: string; role: "user" | "assistant"; content: string; ui_surfaces?: unknown[]; traces?: ToolTrace[] };
 type Session = { id: string; title: string; messages: Message[]; conversationId?: number };
 const starters = [
   { icon: Compass, title: "Create a PayPal invoice", prompt: "Draft a PayPal invoice for alex@example.com for USD 125. Ask me before sending it." },
@@ -98,6 +99,10 @@ export default function ChatPage() {
     setSessions(previous => previous.map(session => session.id === sessionId ? { ...session, messages: update(session.messages) } : session));
   }
 
+  function receiveSurfaces(sessionId: string, messageId: string, surfaces: unknown[]) {
+    updateAssistant(sessionId, messageId, message => ({ ...message, ui_surfaces: surfaces }));
+  }
+
   function receiveTrace(sessionId: string, messageId: string, trace: ToolTrace) {
     updateAssistant(sessionId, messageId, message => {
       const traces = message.traces ?? [];
@@ -118,7 +123,7 @@ export default function ChatPage() {
       const result = await resumeApproval(session.conversationId, approval.approval_id, decision, chunk => {
         content += chunk;
         updateAssistant(session.id, assistantId, message => ({ ...message, content }));
-      }, setApproval, trace => receiveTrace(session.id, assistantId, trace), setClarification);
+      }, setApproval, trace => receiveTrace(session.id, assistantId, trace), setClarification, surfaces => receiveSurfaces(session.id, assistantId, surfaces));
       setApproval(result.approval ?? null);
       setClarification(result.clarification ?? null);
     } catch {
@@ -147,7 +152,7 @@ export default function ChatPage() {
       const result = await resumeClarification(session.conversationId, pending.clarification_id, answers, chunk => {
         content += chunk;
         updateAssistant(session.id, assistantId, message => ({ ...message, content }));
-      }, setClarification, setApproval, trace => receiveTrace(session.id, assistantId, trace));
+      }, setClarification, setApproval, trace => receiveTrace(session.id, assistantId, trace), surfaces => receiveSurfaces(session.id, assistantId, surfaces));
       setClarification(result.clarification ?? null);
       setApproval(result.approval ?? null);
     } catch {
@@ -233,7 +238,7 @@ export default function ChatPage() {
       }, idFromServer => {
         conversationId = idFromServer;
         setSessions(previous => previous.map(session => session.id === id ? { ...session, conversationId: idFromServer } : session));
-      }, setApproval, trace => receiveTrace(id, assistantId, trace), setClarification);
+      }, setApproval, trace => receiveTrace(id, assistantId, trace), setClarification, surfaces => receiveSurfaces(id, assistantId, surfaces));
       if (!content && !result.approval && !result.clarification) throw new Error("Empty response");
     } catch {
       const reconciled = conversationId ? await reconcileSavedState(id, conversationId) : false;
@@ -304,6 +309,7 @@ export default function ChatPage() {
                 <article key={message.id} aria-label={message.role === "assistant" ? "Assistant response" : "Your message"} className={message.role === "user" ? "ml-auto max-w-[90%] rounded-2xl border border-border bg-card px-4 py-3 text-sm" : "w-full text-sm leading-7"}>
                   {message.role === "assistant" && <ToolTraces traces={message.traces ?? []} busy={busy && message.id === messages.at(-1)?.id} />}
                   {message.content ? message.role === "user" ? <p className="whitespace-pre-wrap break-words">{message.content}</p> : <MessageResponse isAnimating={busy && message.id === messages.at(-1)?.id}>{message.content}</MessageResponse> : busy ? <div role="status" className="flex items-center gap-2 text-sm text-muted-foreground"><span className="size-2 animate-pulse rounded-full bg-foreground/40" />Thinking…</div> : <p className="text-muted-foreground">{clarification ? "Waiting for your answers below." : approval ? "Waiting for your approval below." : "No response received. Retry your message."}</p>}
+                  {message.role === "assistant" && !!message.ui_surfaces?.length && <Presentation surfaces={message.ui_surfaces} />}
                   {message.role === "assistant" && message.content && !busy && <Button variant="ghost" size="icon-sm" className="mt-2 text-muted-foreground" aria-label={copied === message.id ? "Copied" : "Copy response"} title={copied === message.id ? "Copied" : "Copy response"} onClick={() => copyMessage(message)}>{copied === message.id ? <Check size={13} /> : <Copy size={13} />}</Button>}
                 </article>
               ))}

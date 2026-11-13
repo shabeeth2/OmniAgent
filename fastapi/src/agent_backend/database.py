@@ -27,6 +27,9 @@ def initialize_schema(target_engine=engine):
     """Only additive changes; never rewrite or drop saved user data."""
     from sqlalchemy import inspect, text
     Base.metadata.create_all(bind=target_engine)
+    if 'ui_surfaces_json' not in {column['name'] for column in inspect(target_engine).get_columns('messages')}:
+        with target_engine.begin() as connection:
+            connection.execute(text('ALTER TABLE messages ADD COLUMN ui_surfaces_json TEXT'))
     if 'catalog_version' not in {column['name'] for column in inspect(target_engine).get_columns('tool_traces')}:
         with target_engine.begin() as connection:
             connection.execute(text('ALTER TABLE tool_traces ADD COLUMN catalog_version VARCHAR(64)'))

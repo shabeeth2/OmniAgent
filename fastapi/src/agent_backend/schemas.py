@@ -22,6 +22,7 @@ class MessageRead(BaseModel):
     id: int
     conversation_id: int
     created_at: datetime
+    ui_surfaces: list[dict] = Field(default_factory=list)
     traces: List[TraceRead] = Field(default_factory=list)
 
     class Config:

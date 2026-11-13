@@ -8,7 +8,7 @@ export type ClarificationQuestion = { id: string; q: string; type: "radio" | "ch
 export type ClarificationAnswer = { question_id: string; selected: number[]; custom: string; skipped: boolean };
 export type Clarification = { run_id: string; clarification_id: string; questions: ClarificationQuestion[] };
 export type ToolTrace = { catalog_version?: string | null; id: string; call_id: string; tool_name: string; status: "running" | "awaiting_approval" | "completed" | "rejected" | "failed"; arguments?: string | null; result?: string | null; duration_ms?: number | null };
-export type SavedMessage = { id: number; role: "user" | "assistant"; content: string; traces?: ToolTrace[] };
+export type SavedMessage = { id: number; role: "user" | "assistant"; content: string; ui_surfaces?: unknown[]; traces?: ToolTrace[] };
 
 export async function getSavedConversationState(id: number) {
   const [response, approval, clarification] = await Promise.all([
@@ -41,6 +41,7 @@ export async function sendChatMessage(
   onApproval?: (approval: Approval) => void,
   onTrace?: (trace: ToolTrace) => void,
   onClarification?: (clarification: Clarification) => void,
+  onSurfaces?: (surfaces: unknown[]) => void,
 ) {
   const response = await fetch(`${FASTAPI_BASE_URL}/api/chat`, {
     method: "POST",
@@ -48,30 +49,31 @@ export async function sendChatMessage(
     body: JSON.stringify({ message, conversation_id: conversationId }),
     signal: AbortSignal.timeout(60000),
   });
-  return consumeChat(response, conversationId, onChunk, onConversation, onApproval, onTrace, onClarification);
+  return consumeChat(response, conversationId, onChunk, onConversation, onApproval, onTrace, onClarification, onSurfaces);
 }
 
-export async function resumeApproval(conversationId: number, approvalId: string, decision: ApprovalSubmission, onChunk: (chunk: string) => void, onApproval: (approval: Approval) => void, onTrace?: (trace: ToolTrace) => void, onClarification?: (clarification: Clarification) => void) {
+export async function resumeApproval(conversationId: number, approvalId: string, decision: ApprovalSubmission, onChunk: (chunk: string) => void, onApproval: (approval: Approval) => void, onTrace?: (trace: ToolTrace) => void, onClarification?: (clarification: Clarification) => void, onSurfaces?: (surfaces: unknown[]) => void) {
   const response = await fetch(`${FASTAPI_BASE_URL}/api/conversations/${conversationId}/approvals/${encodeURIComponent(approvalId)}`, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Array.isArray(decision) ? { decisions: decision } : { decision }), signal: AbortSignal.timeout(60000),
   });
-  return consumeChat(response, conversationId, onChunk, undefined, onApproval, onTrace, onClarification);
+  return consumeChat(response, conversationId, onChunk, undefined, onApproval, onTrace, onClarification, onSurfaces);
 }
 
-export async function resumeClarification(conversationId: number, clarificationId: string, answers: ClarificationAnswer[], onChunk: (chunk: string) => void, onClarification: (clarification: Clarification) => void, onApproval?: (approval: Approval) => void, onTrace?: (trace: ToolTrace) => void) {
+export async function resumeClarification(conversationId: number, clarificationId: string, answers: ClarificationAnswer[], onChunk: (chunk: string) => void, onClarification: (clarification: Clarification) => void, onApproval?: (approval: Approval) => void, onTrace?: (trace: ToolTrace) => void, onSurfaces?: (surfaces: unknown[]) => void) {
   const response = await fetch(`${FASTAPI_BASE_URL}/api/conversations/${conversationId}/clarifications/${encodeURIComponent(clarificationId)}`, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ answers }), signal: AbortSignal.timeout(60000),
   });
-  return consumeChat(response, conversationId, onChunk, undefined, onApproval, onTrace, onClarification);
+  return consumeChat(response, conversationId, onChunk, undefined, onApproval, onTrace, onClarification, onSurfaces);
 }
 
-async function consumeChat(response: Response, conversationId?: number, onChunk?: (chunk: string) => void, onConversation?: (id: number) => void, onApproval?: (approval: Approval) => void, onTrace?: (trace: ToolTrace) => void, onClarification?: (clarification: Clarification) => void) {
+async function consumeChat(response: Response, conversationId?: number, onChunk?: (chunk: string) => void, onConversation?: (id: number) => void, onApproval?: (approval: Approval) => void, onTrace?: (trace: ToolTrace) => void, onClarification?: (clarification: Clarification) => void, onSurfaces?: (surfaces: unknown[]) => void) {
   if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
   if (!response.body) throw new Error("No response body");
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let pending = "";
   let content = "";
+  let ui_surfaces: unknown[] = [];
   let id = conversationId;
   let approval: Approval | undefined;
   let clarification: Clarification | undefined;
@@ -88,9 +90,13 @@ async function consumeChat(response: Response, conversationId?: number, onChunk?
         const data = line.slice(5).trim();
         if (data === "[DONE]") {
           if (!id) throw new Error("Missing conversation ID");
-          return { conversation_id: id, message: content, approval, clarification };
+          return { conversation_id: id, message: content, approval, clarification, ui_surfaces };
         }
         const event = JSON.parse(data);
+        if (Array.isArray(event.ui_surfaces)) {
+          ui_surfaces = event.ui_surfaces;
+          onSurfaces?.(ui_surfaces);
+        }
         if (event.trace) onTrace?.(event.trace);
         if (Number.isInteger(event.conversation_id) && event.conversation_id > 0) {
           id = event.conversation_id;

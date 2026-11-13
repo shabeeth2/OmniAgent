@@ -54,6 +54,7 @@ function mount({ readSavedState, send = async () => ({}) }) {
       if (name === "@/components/ui/button") return { Button: "Button" };
       if (name === "@/components/ui/dialog") return { Dialog: "Dialog", DialogContent: "DialogContent", DialogTitle: "DialogTitle", DialogDescription: "DialogDescription" };
       if (name === "@/components/ToolRegistry") return component("ToolRegistry");
+      if (name === "@/components/Presentation") return component("Presentation");
       if (name === "@/components/ToolTraces") return component("ToolTraces");
       if (name === "@/components/SidebarNav") return component("SidebarNav");
       if (name === "@/components/PromptBar") return component("PromptBar");

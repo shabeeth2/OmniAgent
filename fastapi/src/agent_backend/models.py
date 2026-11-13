@@ -21,8 +21,19 @@ class Message(Base):
     conversation_id = Column(Integer, nullable=False, index=True)
     role = Column(String(50), nullable=False)
     content = Column(Text, nullable=False)
+    ui_surfaces_json = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     traces = relationship('ToolTrace', primaryjoin='Message.id == foreign(ToolTrace.message_id)', cascade='all, delete-orphan', order_by='ToolTrace.sequence')
+
+    @property
+    def ui_surfaces(self):
+        import json
+        try:
+            value = json.loads(self.ui_surfaces_json or '[]')
+            return value if isinstance(value, list) else []
+        except (ValueError, TypeError):
+            return []
+
 
 
 class ToolTrace(Base):

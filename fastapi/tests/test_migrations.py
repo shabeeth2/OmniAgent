@@ -9,6 +9,17 @@ from agent_backend.utils.history import backfill_requests, previous_requests
 
 
 class MigrationTest(unittest.TestCase):
+    def test_additive_surface_migration_preserves_messages(self):
+        engine = create_engine('sqlite:///:memory:')
+        self.addCleanup(engine.dispose)
+        with engine.begin() as connection:
+            connection.execute(text('CREATE TABLE messages (id INTEGER PRIMARY KEY, content TEXT)'))
+            connection.execute(text("INSERT INTO messages VALUES (1, 'Saved answer')"))
+        initialize_schema(engine)
+        initialize_schema(engine)
+        with engine.connect() as connection:
+            self.assertEqual(connection.execute(text('SELECT content,ui_surfaces_json FROM messages')).one(), ('Saved answer', None))
+
     def test_additive_question_migration_preserves_pending_approval(self):
         engine = create_engine('sqlite:///:memory:')
         self.addCleanup(engine.dispose)
