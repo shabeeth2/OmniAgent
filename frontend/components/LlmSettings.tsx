@@ -13,7 +13,7 @@ export default function LlmSettings() {
     <DialogTrigger asChild>
       <button type="button" title="Configure LLM" className="sidebar-row mx-2 mt-4 flex h-9 items-center rounded-lg px-2 text-left text-ink-2 transition-colors hover:bg-hover-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <Settings2 aria-hidden="true" className="size-5 shrink-0" />
-        <span className="sidebar-copy ml-2 truncate text-sm font-medium">Configure LLM</span>
+        <span className="sidebar-copy ml-2 truncate text-sm font-medium">Configure</span>
       </button>
     </DialogTrigger>
     <DialogContent className="max-h-[90dvh] w-[calc(100%_-_2rem)] overflow-y-auto rounded-lg">
