@@ -69,7 +69,7 @@ try {
         }
     } finally { Pop-Location }
 
-    Start-Process cmd.exe -WindowStyle Hidden -WorkingDirectory (Join-Path $PSScriptRoot 'backend') -ArgumentList '/c', 'uv run --python 3.13 uvicorn agent_backend.main:app --reload --host 127.0.0.1 --port 8000'
+    Start-Process (Join-Path $PSScriptRoot 'backend\.venv\Scripts\python.exe') -WindowStyle Hidden -WorkingDirectory (Join-Path $PSScriptRoot 'backend') -ArgumentList '-m uvicorn agent_backend.main:app --reload --host 127.0.0.1 --port 8000'
     Start-Process cmd.exe -WindowStyle Hidden -WorkingDirectory (Join-Path $PSScriptRoot 'frontend') -ArgumentList '/c', 'npm run dev -- --webpack'
     Write-Host 'Servers launched in hidden windows. Open http://localhost:3000 when the frontend is ready.'
     Write-Host 'To stop them, end the uvicorn and Node.js processes in Task Manager.'
