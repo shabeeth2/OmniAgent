@@ -8,7 +8,7 @@ The local demo implementation is complete within the approved simulation scope. 
 
 - Backend: final full offline unittest suite passed **89 tests** in 45.063 seconds. Tests use fake providers and temporary/in-memory stores. Approval and clarification resumes were verified across checkpoint restarts, including exact-call decisions, rejection traces and active-budget persistence.
 - Frontend: regression tests, ESLint, TypeScript, Webpack production build, and generated stylesheet checks passed.
-- Browser: production frontend against `fastapi/scripts/browser_demo.py`, with scripted responses and temporary databases. Verified cited support retrieval; three-page sales totals (USD 150.00, EUR 20.00); draft/send approval; restored pending send after page reload; successful simulated sending; rejection; previous-request status; mapped and paginated open disputes D1/D3. This checks UI and orchestration, not live model decisions.
+- Browser: production frontend against `backend/scripts/browser_demo.py`, with scripted responses and temporary databases. Verified cited support retrieval; three-page sales totals (USD 150.00, EUR 20.00); draft/send approval; restored pending send after page reload; successful simulated sending; rejection; previous-request status; mapped and paginated open disputes D1/D3. This checks UI and orchestration, not live model decisions.
 - Offline discovery: [measured JSON](evaluation-results.json), 20 labeled queries at each of 50, 100, 500 and 1,000 descriptors. Recall@5 was 95% at each size. Latency and embedding/index costs are included. Synthetic catalogs and hash vectors are smoke evidence, not production semantic-quality evidence.
 
 ## Limits and remaining verification

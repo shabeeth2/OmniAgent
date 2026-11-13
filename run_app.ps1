@@ -48,7 +48,7 @@ try {
         throw 'npm is missing. Repair your Node.js installation, then rerun this script.'
     }
 
-    Push-Location (Join-Path $PSScriptRoot 'fastapi')
+    Push-Location (Join-Path $PSScriptRoot 'backend')
     try {
         Write-Host 'Ensuring Python 3.13 is installed (compatible with dependency wheels)...'
         & uv python install 3.13
@@ -58,7 +58,7 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'Backend dependency installation failed.' }
     } finally { Pop-Location }
 
-    Push-Location (Join-Path $PSScriptRoot 'nextjs')
+    Push-Location (Join-Path $PSScriptRoot 'frontend')
     try {
         Write-Host 'Checking frontend dependencies...'
         & npm.cmd ls --all --silent *> $null
@@ -69,8 +69,8 @@ try {
         }
     } finally { Pop-Location }
 
-    Start-Process cmd.exe -WindowStyle Hidden -WorkingDirectory (Join-Path $PSScriptRoot 'fastapi') -ArgumentList '/c', 'uv run --python 3.13 uvicorn agent_backend.main:app --reload --host 127.0.0.1 --port 8000'
-    Start-Process cmd.exe -WindowStyle Hidden -WorkingDirectory (Join-Path $PSScriptRoot 'nextjs') -ArgumentList '/c', 'npm run dev -- --webpack'
+    Start-Process cmd.exe -WindowStyle Hidden -WorkingDirectory (Join-Path $PSScriptRoot 'backend') -ArgumentList '/c', 'uv run --python 3.13 uvicorn agent_backend.main:app --reload --host 127.0.0.1 --port 8000'
+    Start-Process cmd.exe -WindowStyle Hidden -WorkingDirectory (Join-Path $PSScriptRoot 'frontend') -ArgumentList '/c', 'npm run dev -- --webpack'
     Write-Host 'Servers launched in hidden windows. Open http://localhost:3000 when the frontend is ready.'
     Write-Host 'To stop them, end the uvicorn and Node.js processes in Task Manager.'
 } catch {

@@ -100,6 +100,6 @@ This is a single-user, single-process loopback demo without application authenti
 
 - [Repository README](../README.md): setup, environment variables, and demo prompts.
 - [Detailed architecture](scalable-agentic-system.md): expanded workflows, trade-offs, and evidence links.
-- [Backend guide](../fastapi/README.md): API/SSE contract and saved-state details.
+- [Backend guide](../backend/README.md): API/SSE contract and saved-state details.
 - [Historical validation](validation.md): executed checks and limitations.
 - [LangGraph persistence](https://docs.langchain.com/oss/python/langgraph/persistence) and [interrupts](https://docs.langchain.com/oss/python/langgraph/interrupts): official checkpoint/review documentation. Resume can replay node code; side effects require explicit care.

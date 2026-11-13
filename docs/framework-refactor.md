@@ -4,7 +4,7 @@ The decision below describes the earlier sequential-only contract. The approved 
 
 # Prebuilt agent compatibility experiment
 
-The offline experiment in `fastapi/tests/test_framework_compatibility.py` uses the
+The offline experiment in `backend/tests/test_framework_compatibility.py` uses the
 installed LangChain `create_agent`, a fake framework chat model, real tool
 dispatch, per-call human approval middleware, and model-limit middleware. It makes
 no network or provider calls and does not open saved application databases.

@@ -6,13 +6,13 @@ Local single-user FastAPI/LangGraph demonstration of tool discovery, dependency-
 
 Use Python 3.13, pinned in `.python-version`, for the local Docling dependency stack. `pyproject.toml` requires `>=3.13,<3.14`.
 
-From `fastapi/`:
+From `backend/`:
 
 ```powershell
 uv sync --locked --python 3.13
 ```
 
-Create `fastapi/.env` with your provider settings:
+Create `.env` with your provider settings:
 
 ```dotenv
 AGENT_MODEL=your-tool-calling-chat-model
@@ -32,7 +32,7 @@ Chat and embeddings are independent. Embeddings use Jina's API with 1024 dimensi
 uv run --python 3.13 uvicorn agent_backend.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-In another terminal, from `nextjs/`, run `npm install` then `npm run dev`. Its dev/build scripts use **Webpack**. The frontend defaults to `http://localhost:8000`; override with `NEXT_PUBLIC_FASTAPI_URL`. CORS allows localhost and 127.0.0.1 on port 3000. Keep this unauthenticated application on loopback, with one backend process.
+In another terminal, from `frontend/`, run `npm install` then `npm run dev`. Its dev/build scripts use **Webpack**. The frontend defaults to `http://localhost:8000`; override with `NEXT_PUBLIC_FASTAPI_URL`. CORS allows localhost and 127.0.0.1 on port 3000. Keep this unauthenticated application on loopback, with one backend process.
 
 ## Capabilities and limits
 
