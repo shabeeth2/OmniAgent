@@ -109,7 +109,7 @@ npm run dev
 
 The frontend defaults to backend port 8000; set `NEXT_PUBLIC_FASTAPI_URL` to override it. Development and builds use Webpack.
 
-## Try the assignment scenarios
+## Example prompts
 
 - “Create and send a simulated invoice for USD 50.00 to alex@example.com.” Review the draft and send approvals separately.
 - “What was my gross completed sales volume in October 2026?” The fixed demo data totals USD 150.00 and EUR 20.00 separately, after all pages.
@@ -119,7 +119,7 @@ Also try “How quickly does support respond?” for cited knowledge retrieval, 
 
 ## Documentation and checks
 
-- [Assignment overview](docs/project-overview.md) and [shareable PDF](output/pdf/project-overview.pdf)
+- [Project overview](docs/project-overview.md) and [shareable PDF](output/pdf/project-overview.pdf)
 - [Detailed architecture, trade-offs, and evidence](docs/scalable-agentic-system.md)
 - [Backend setup, API/SSE contract, and state](backend/README.md)
 - [Historical verification and limitations](docs/validation.md)
