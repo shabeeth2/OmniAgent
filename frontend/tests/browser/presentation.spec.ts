@@ -7,13 +7,15 @@ test("compiled styles", async () => {
   expect(result.stdout).toContain("Styles verified");
 });
 
-const surface = (kind: "BarChart" | "LineChart", title: string) => ({
-  id: "shared-id", title, source: "User supplied fixture", incomplete: false,
+const surface = (kind: "BarChart" | "LineChart", title: string, incomplete = false) => ({
+  id: "shared-id", title, source: "User supplied fixture", incomplete,
   messages: [
     { version: "v0.9", createSurface: { surfaceId: "shared-id", catalogId: "urn:agent-tool-scale:read-only:v1" } },
     { version: "v0.9", updateComponents: { surfaceId: "shared-id", components: [
-      { id: "root", component: "Column", children: ["metric", "chart", "table"] },
+      { id: "root", component: "Column", children: ["summary", "chart", "table"] },
+      { id: "summary", component: "Row", children: ["metric", "note"] },
       { id: "metric", component: "Metric", label: "Total USD", value: "125" },
+      { id: "note", component: "Text", text: "Read-only visual summary" },
       { id: "chart", component: kind, title: "Monthly sales", unit: "USD", points: [{ label: "Sep", value: 50 }, { label: "Oct", value: 75 }] },
       { id: "table", component: "Table", columns: ["Month", "USD"], rows: [["Sep", 50], ["Oct", 75]] },
     ] } },
@@ -22,13 +24,15 @@ const surface = (kind: "BarChart" | "LineChart", title: string) => ({
 
 for (const width of [1280, 390]) {
   test(`charts, restoration and malformed fallback at ${width}px`, async ({ page }, testInfo) => {
-    await page.setViewportSize({ width, height: 900 });
+    // Tall evidence viewport keeps the complete saved visual collection in frame,
+    // while preserving the desktop/mobile width under test.
+    await page.setViewportSize({ width, height: width < 768 ? 2200 : 1800 });
     const errors: string[] = [];
     page.on("pageerror", error => errors.push(error.message));
     const conversation: { id: number; title: string; messages: { id: number; role: string; content: string; ui_surfaces?: unknown[] }[] } = { id: 1, title: "Visual fixture", messages: [
       { id: 1, role: "user", content: "Show sample sales" },
       { id: 2, role: "assistant", content: "**Fixture summary:** USD 125.", ui_surfaces: [surface("BarChart", "Sales bars")] },
-      { id: 3, role: "assistant", content: "Trend summary.", ui_surfaces: [surface("LineChart", "Sales trend")] },
+      { id: 3, role: "assistant", content: "Trend summary.", ui_surfaces: [surface("LineChart", "Sales trend", true)] },
     ] };
     await page.route("**/api/**", async route => {
       const path = new URL(route.request().url()).pathname;
@@ -64,6 +68,7 @@ for (const width of [1280, 390]) {
     await expect(page.getByText("Text remains available.", { exact: true })).toBeVisible();
     await expect(page.getByText("This visual could not be displayed. Refer to the response text.")).toBeVisible();
     await expect(page.locator(".recharts-surface")).toHaveCount(2);
+    await page.screenshot({ path: testInfo.outputPath("malformed-surface-fallback.png"), fullPage: true });
     expect(errors).toEqual([]);
   });
 }
