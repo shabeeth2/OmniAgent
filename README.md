@@ -117,6 +117,10 @@ The frontend defaults to backend port 8000; set `NEXT_PUBLIC_FASTAPI_URL` to ove
 
 Also try “How quickly does support respond?” for cited knowledge retrieval, or “What happened to my last request?” for persisted status.
 
+## Feature evidence
+
+Browse fixture-based screenshots of the [workspace and conversations](docs/evidence/application/README.md#workspace-and-conversations), [approval and clarification](docs/evidence/application/README.md#approval-and-clarification), [tool catalog and connections](docs/evidence/application/README.md#tool-catalog-and-connections), [model configuration](docs/evidence/application/README.md#model-configuration), and [charts, tables, and responsive layouts](docs/evidence/application/README.md#charts-cards-tables-and-responsive-layout).
+
 ## Documentation and checks
 
 - [Project overview](docs/project-overview.md) and [shareable PDF](output/pdf/project-overview.pdf)
